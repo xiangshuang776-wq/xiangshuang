@@ -3,165 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE_DESTINY_V14</title>
+    <title>DESTINY_AXIS_V15</title>
     <style>
-        :root { --gold: #d4b08c; --bg: #0c0c0e; --text: #f0f0f0; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+        :root { --gold: #c5a059; --bg: #050505; --line: rgba(197, 160, 89, 0.2); }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font-family: "PingFang SC", "Noto Serif SC", serif; overflow: hidden; }
 
-        /* 首页布局 */
+        /* 首页：录入界面 */
         #home-page { 
-            position: fixed; inset: 0; z-index: 100; 
-            background: radial-gradient(circle at 50% -20%, #1e1e22 0%, #0c0c0e 100%);
-            display: flex; flex-direction: column; padding: 60px 40px; 
-            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+            position: fixed; inset: 0; z-index: 100; padding: 60px 40px;
+            background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 100%);
+            display: flex; flex-direction: column; transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
         }
+        .header h1 { font-size: 36px; font-weight: 200; letter-spacing: 12px; color: var(--gold); text-align: center; margin-bottom: 60px; }
         
-        .title-area { margin-bottom: 50px; }
-        .title-area h1 { font-size: 32px; font-weight: 300; letter-spacing: 8px; color: var(--gold); }
-        .title-area p { font-size: 10px; opacity: 0.4; letter-spacing: 2px; margin-top: 10px; }
-
-        /* 输入组 */
-        .input-group { margin-bottom: 30px; }
-        .input-label { font-size: 12px; color: var(--gold); margin-bottom: 10px; display: block; opacity: 0.8; }
-        input { 
-            width: 100%; background: transparent; border: none; 
-            border-bottom: 1px solid rgba(212, 176, 140, 0.3); 
-            padding: 12px 0; color: #fff; font-size: 18px; outline: none;
-            transition: 0.3s;
+        .input-item { margin-bottom: 40px; }
+        .input-item label { display: block; font-size: 10px; color: var(--gold); letter-spacing: 3px; margin-bottom: 12px; opacity: 0.6; }
+        .input-item input { 
+            width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--line);
+            padding: 10px 0; color: #fff; font-size: 20px; outline: none; transition: 0.3s;
         }
-        input:focus { border-bottom: 1px solid var(--gold); }
+        .input-item input:focus { border-bottom: 1px solid var(--gold); }
 
-        /* 选项组 */
-        .type-selector { display: flex; justify-content: space-between; margin: 20px 0 40px; }
-        .type-item { 
-            width: 80px; height: 80px; border: 1px solid rgba(212, 176, 140, 0.2); 
-            border-radius: 50%; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; font-size: 12px;
-            transition: 0.3s; cursor: pointer; color: rgba(255,255,255,0.4);
+        .selector { display: flex; justify-content: space-between; margin-top: 10px; }
+        .sel-opt { 
+            flex: 1; text-align: center; padding: 15px 0; border: 1px solid var(--line); 
+            font-size: 12px; color: #666; transition: 0.3s; margin: 0 5px; cursor: pointer;
         }
-        .type-item.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 176, 140, 0.1); box-shadow: 0 0 15px rgba(212, 176, 140, 0.2); }
+        .sel-opt.active { border-color: var(--gold); color: var(--gold); background: rgba(197, 160, 89, 0.05); }
 
-        .start-btn { 
-            width: 100%; padding: 20px; background: var(--gold); color: #000; 
-            border: none; font-weight: bold; font-size: 16px; letter-spacing: 4px;
-            margin-top: auto; border-radius: 2px;
+        .submit-btn { 
+            margin-top: auto; width: 100%; padding: 22px; background: var(--gold); 
+            color: #000; border: none; font-weight: 900; letter-spacing: 6px; font-size: 16px;
         }
 
-        /* 调频页面 */
+        /* 调频页：星象核心 */
         #tuner-page { 
-            position: fixed; inset: 0; z-index: 50; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            position: fixed; inset: 0; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 50; visibility: hidden;
         }
-        #wheel-container { position: relative; width: 320px; height: 320px; display: flex; justify-content: center; align-items: center; }
+        .dial-wrap { position: relative; width: 340px; height: 340px; display: flex; justify-content: center; align-items: center; }
         
-        /* 神秘符号环 */
-        #symbol-ring { 
-            position: absolute; inset: 0; border-radius: 50%; 
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><text x="50%" y="50%" text-anchor="middle" font-size="12" fill="rgba(212,176,140,0.3)" font-family="serif">❈ ⚖ ⚜ ⚛ ⚝ ☸ ☽ ☉ ☿ ♀ ♂ ♃ ♄ ♅ ♆ ♇</text></svg>');
-            border: 1px solid rgba(212, 176, 140, 0.1);
-            animation: rotate 60s linear infinite;
+        /* 梵文符文圈 */
+        .symbol-ring { 
+            position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--line);
+            display: flex; justify-content: center; align-items: center;
         }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .symbol { 
+            position: absolute; font-size: 16px; color: var(--gold); opacity: 0.2; 
+            font-family: serif; width: 20px; text-align: center; transition: 0.3s;
+        }
 
-        #pointer { width: 2px; height: 140px; background: linear-gradient(to top, var(--gold), transparent); transform-origin: bottom center; transition: 0.1s; z-index: 10; }
-        
+        /* 指针：精准固定圆心 */
+        #pointer-axis { 
+            position: relative; width: 4px; height: 4px; background: var(--gold); border-radius: 50%;
+            z-index: 20; box-shadow: 0 0 10px var(--gold);
+        }
+        #pointer-needle { 
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 1px; height: 140px; background: linear-gradient(to top, var(--gold), transparent);
+            transform-origin: bottom center; transition: transform 0.1s ease-out;
+        }
+
+        .status-msg { margin-top: 60px; font-size: 12px; letter-spacing: 4px; color: #444; text-align: center; }
+        #sync-per { font-size: 10px; color: var(--gold); margin-top: 10px; opacity: 0; }
+
         /* 结果页 */
         #result-page { 
-            display: none; position: fixed; inset: 0; background: #fff; color: #000; z-index: 200; 
-            flex-direction: column; justify-content: center; align-items: center; padding: 40px;
+            position: fixed; inset: 0; z-index: 200; background: #fff; color: #000;
+            display: none; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
         }
+        .res-name { font-size: 18px; letter-spacing: 4px; margin-bottom: 10px; }
+        .res-date { font-size: 56px; font-weight: 900; letter-spacing: -2px; border-bottom: 4px solid #000; padding-bottom: 5px; }
     </style>
 </head>
 <body>
 
     <div id="home-page">
-        <div class="title-area">
-            <h1>命定之枢</h1>
-            <p>ESTABLISHING CAUSAL CONNECTIVITY</p>
+        <div class="header"><h1>命数之枢</h1></div>
+        <div class="input-item">
+            <label>受测者姓名</label>
+            <input type="text" id="uname" placeholder="NAME" spellcheck="false">
         </div>
-
-        <div class="input-group">
-            <span class="input-label">姓名 / NAME</span>
-            <input type="text" placeholder="请输入您的姓名" id="name-in">
+        <div class="input-item">
+            <label>生辰节点</label>
+            <input type="date" id="ubirth">
         </div>
-
-        <div class="input-group">
-            <span class="input-label">生辰 / BIRTHDATE</span>
-            <input type="date" id="date-in">
+        <div class="input-item">
+            <label>观测维度</label>
+            <div class="selector">
+                <div class="sel-opt active" onclick="setOpt(this)">财富</div>
+                <div class="sel-opt" onclick="setOpt(this)">缘分</div>
+                <div class="sel-opt" onclick="setOpt(this)">健康</div>
+            </div>
         </div>
-
-        <span class="input-label">观测维度 / DIMENSION</span>
-        <div class="type-selector">
-            <div class="type-item active" onclick="selectType(this)">财富</div>
-            <div class="type-item" onclick="selectType(this)">缘分</div>
-            <div class="type-item" onclick="selectType(this)">健康</div>
-        </div>
-
-        <button class="start-btn" onclick="goToTuner()">开启频率捕获</button>
+        <button class="submit-btn" onclick="startScan()">开启频率捕获</button>
     </div>
 
     <div id="tuner-page">
-        <div id="wheel-container">
-            <div id="symbol-ring"></div>
-            <div id="pointer"></div>
+        <div class="dial-wrap">
+            <div class="symbol-ring" id="ring"></div>
+            <div id="pointer-axis">
+                <div id="pointer-needle"></div>
+            </div>
         </div>
-        <div style="margin-top: 40px; text-align: center;">
-            <p id="tuner-msg" style="font-size: 14px; letter-spacing: 5px; color: var(--gold);">滑动屏幕 · 寻找共振点</p>
-            <p id="sync-val" style="font-size: 10px; opacity: 0.3; margin-top: 10px;">SYNC_STABILITY: 0.00%</p>
-        </div>
+        <div class="status-msg" id="hint">左右滑动屏幕以对齐宿命符文</div>
+        <div id="sync-per">SYNC: 0%</div>
     </div>
 
     <div id="result-page">
-        <div style="font-size: 12px; letter-spacing: 3px; color: #888; margin-bottom: 20px;">NODE_LOCKED</div>
-        <div id="user-info" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;"></div>
-        <div id="res-date" style="font-size: 48px; font-weight: 900; letter-spacing: -2px;">2026.08.15</div>
-        <div style="width: 30px; height: 1px; background: #000; margin: 30px 0;"></div>
-        <p style="text-align: center; line-height: 1.8; font-size: 15px;">
-            此节点为您命定的<b>资产爆发日</b>。<br>
-            当前因果同步率已达上限。
+        <div class="res-name" id="res-user">---</div>
+        <div style="font-size: 10px; color: #888; margin-bottom: 40px;">2026年 极值点锁定</div>
+        <div class="res-date" id="res-val">05.18</div>
+        <p style="margin-top: 50px; text-align: center; font-size: 14px; line-height: 2;">
+            因果频率已完全同步。<br><b>[ 该节点不可撤销 ]</b>
         </p>
-        <button onclick="location.reload()" style="margin-top: 50px; background: #000; color: #fff; padding: 15px 40px; border: none; font-size: 12px; letter-spacing: 2px;">保存档案并退出</button>
+        <button onclick="location.reload()" style="margin-top: 60px; background: #000; color: #fff; border: none; padding: 18px 40px; font-weight: bold; letter-spacing: 2px;">保存档案</button>
     </div>
 
     <script>
-        function selectType(el) {
-            document.querySelectorAll('.type-item').forEach(i => i.classList.remove('active'));
+        // 初始化符文圈
+        const ring = document.getElementById('ring');
+        const symbols = "ॐ卍☯☾☉☿♀♂♃♄♅♆♇♈♉♊♋♌♍♎♏♐♑♒♓";
+        for(let i=0; i<24; i++) {
+            const s = document.createElement('div');
+            s.className = 'symbol';
+            s.innerText = symbols[i % symbols.length];
+            const angle = (i * 15) * Math.PI / 180;
+            const x = Math.cos(angle) * 150;
+            const y = Math.sin(angle) * 150;
+            s.style.transform = `translate(${x}px, ${y}px)`;
+            ring.appendChild(s);
+        }
+
+        function setOpt(el) {
+            document.querySelectorAll('.sel-opt').forEach(o => o.classList.remove('active'));
             el.classList.add('active');
         }
 
-        function goToTuner() {
-            const name = document.getElementById('name-in').value;
-            if(!name) { alert("请输入姓名以建立链接"); return; }
+        function startScan() {
+            if(!document.getElementById('uname').value) return alert("请录入姓名");
             document.getElementById('home-page').style.transform = "translateY(-100%)";
+            document.getElementById('tuner-page').style.visibility = "visible";
         }
 
-        let currentRotation = 0;
+        let currentRot = 0;
         let lastX = 0;
-        let syncProgress = 0;
-        const pointer = document.getElementById('pointer');
-        const syncVal = document.getElementById('sync-val');
+        let sync = 0;
+        const needle = document.getElementById('pointer-needle');
+        const syncLabel = document.getElementById('sync-per');
+        const hint = document.getElementById('hint');
 
-        window.addEventListener('touchstart', e => { lastX = e.touches[0].clientX; });
+        window.addEventListener('touchstart', e => lastX = e.touches[0].clientX);
         window.addEventListener('touchmove', e => {
-            let delta = e.touches[0].clientX - lastX;
-            currentRotation += delta * 0.6;
-            pointer.style.transform = `rotate(${currentRotation}deg)`;
+            const delta = e.touches[0].clientX - lastX;
+            currentRot += delta * 0.5;
+            needle.style.transform = `translateX(-50%) rotate(${currentRot}deg)`;
             lastX = e.touches[0].clientX;
 
-            // 逻辑：在某个角度附近增加同步率
-            let focus = Math.abs(currentRotation % 360);
-            if(focus > 175 && focus < 185) {
-                syncProgress += 1.5;
-                syncVal.innerText = `SYNC_STABILITY: ${Math.min(syncProgress, 100).toFixed(2)}%`;
-                syncVal.style.color = "#d4b08c";
-                if(syncProgress >= 100) showResult();
+            // 逻辑：对准特定角度(如180度)时增加同步率
+            const normalized = Math.abs(currentRot % 360);
+            if(normalized > 175 && normalized < 185) {
+                sync += 1.2;
+                syncLabel.style.opacity = 1;
+                syncLabel.innerText = `SYNC: ${Math.min(sync, 100).toFixed(0)}%`;
+                hint.innerText = "捕获到核心信号...";
+                hint.style.color = "#c5a059";
+                if(sync >= 100) finish();
+            } else {
+                sync = Math.max(0, sync - 0.5);
+                syncLabel.innerText = `SYNC: ${Math.min(sync, 100).toFixed(0)}%`;
+                hint.innerText = "信号微弱，继续寻找...";
+                hint.style.color = "#444";
             }
         });
 
-        function showResult() {
-            const name = document.getElementById('name-in').value;
-            document.getElementById('user-info').innerText = `${name} · 观测报告`;
+        function finish() {
+            document.getElementById('res-user').innerText = document.getElementById('uname').value.toUpperCase();
+            // 随机生成一个2026年的日期增加真实感
+            const months = ["04", "05", "06", "08", "09", "11"];
+            document.getElementById('res-val').innerText = months[Math.floor(Math.random()*months.length)] + "." + (Math.floor(Math.random()*28)+1).toString().padStart(2,'0');
             document.getElementById('result-page').style.display = 'flex';
         }
     </script>
