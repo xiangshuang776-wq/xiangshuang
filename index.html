@@ -3,122 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UNAUTHORIZED_ACCESS</title>
+    <title>QUANTUM_LINK_V12</title>
     <style>
-        body, html { margin: 0; padding: 0; background: #050505; color: #fff; font-family: monospace; overflow: hidden; height: 100vh; }
+        :root { --main-color: #00e6ff; --accent-color: #ff007f; }
+        body, html { margin: 0; padding: 0; background: #080808; color: var(--main-color); font-family: 'Consolas', monospace; overflow: hidden; height: 100vh; }
         
-        /* 模拟屏幕噪点 */
-        #noise-layer { position: fixed; inset: 0; background: url('https://media.giphy.com/media/oEI9uWU9H0B7q/giphy.gif'); opacity: 0.03; z-index: 100; pointer-events: none; }
+        /* 顶部信息流 */
+        .info-panel { position: absolute; top: 30px; left: 20px; z-index: 10; font-size: 10px; }
+        .info-panel span { display: block; margin-bottom: 5px; }
 
-        /* 顶部黑客指令流 */
-        #log-stream { position: absolute; top: 10px; left: 10px; font-size: 10px; color: #333; height: 100px; overflow: hidden; z-index: 5; }
+        /* 3D 晶体容器 */
+        #crystal-display { 
+            position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; 
+            z-index: 5; perspective: 1000px;
+        }
+        #quantum-crystal { 
+            width: 250px; height: 250px; border-radius: 50%; 
+            background: radial-gradient(circle, rgba(0,230,255,0.1) 0%, rgba(0,230,255,0.02) 70%, transparent 100%);
+            box-shadow: 0 0 80px var(--main-color), inset 0 0 50px var(--main-color);
+            position: relative; transition: 0.3s ease-out; cursor: pointer;
+            transform-style: preserve-3d; animation: pulse 2s infinite ease-in-out;
+        }
+        #quantum-crystal::before {
+            content: ''; position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--main-color);
+            transform: scale(1.1) rotateX(60deg) rotateY(0deg); opacity: 0.2; animation: rotate3d 10s linear infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes rotate3d { from { transform: scale(1.1) rotateX(60deg) rotateY(0deg); } to { transform: scale(1.1) rotateX(60deg) rotateY(360deg); } }
 
-        /* 核心感应器：极简、冷峻 */
-        .main-scanner { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
-        #core-target { width: 120px; height: 120px; border: 1px solid #fff; position: relative; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
-        #core-target::before { content: ''; position: absolute; width: 200%; height: 1px; background: rgba(255,255,255,0.2); }
-        #core-target::after { content: ''; position: absolute; height: 200%; width: 1px; background: rgba(255,255,255,0.2); }
+        /* 核心文字 */
+        #touch-hint { position: absolute; font-size: 14px; text-align: center; line-height: 1.5; text-shadow: 0 0 10px var(--main-color); }
+
+        /* 底部操作面板 */
+        .control-panel { position: absolute; bottom: 40px; width: 100%; text-align: center; z-index: 10; }
+        #status-message { font-size: 14px; margin-bottom: 20px; letter-spacing: 1px; }
+
+        /* 结果展示：动态图 */
+        #result-screen { display: none; position: fixed; inset: 0; background: #080808; z-index: 100; flex-direction: column; justify-content: center; align-items: center; padding: 40px; }
+        .path-title { font-size: 24px; color: var(--main-color); margin-bottom: 20px; text-align: center; }
+        .path-graph { width: 90%; height: 150px; border: 1px solid var(--main-color); position: relative; margin-bottom: 30px; overflow: hidden; }
+        .path-line { position: absolute; width: 200%; height: 100%; background: linear-gradient(90deg, transparent, var(--main-color) 50%, transparent); opacity: 0.3; animation: flow 10s linear infinite; }
+        @keyframes flow { from { left: -100%; } to { left: 0%; } }
+        .key-point { position: absolute; top: 50%; left: 30%; transform: translate(-50%, -50%); background: var(--accent-color); padding: 5px 10px; font-size: 10px; border-radius: 3px; box-shadow: 0 0 15px var(--accent-color); }
+        .blur-effect { position: absolute; right: 0; top: 0; bottom: 0; width: 30%; background: linear-gradient(to right, transparent, #080808); }
         
-        /* 交互反馈文字 */
-        .hint-text { margin-top: 40px; font-size: 12px; letter-spacing: 4px; text-align: center; color: #666; }
-
-        /* 结果弹窗：档案感 */
-        #result-screen { display: none; position: fixed; inset: 0; background: #f0f0f0; color: #000; z-index: 1000; padding: 40px; flex-direction: column; }
-        .file-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
-        .file-title { font-size: 24px; font-weight: 900; }
-        .data-row { margin: 15px 0; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .data-label { font-size: 10px; color: #888; text-transform: uppercase; }
-        .data-val { font-size: 20px; font-weight: bold; }
-        
-        #cta-btn { margin-top: auto; width: 100%; padding: 20px; background: #000; color: #fff; border: none; font-weight: bold; }
+        #cta-button { width: 80%; padding: 20px; background: var(--main-color); color: #080808; border: none; font-weight: bold; font-size: 16px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div id="noise-layer"></div>
-    <div id="log-stream"></div>
+    <div class="info-panel">
+        <span id="location">LOC: CAUSALITY_NODE [UNKNOWN]</span>
+        <span id="time">TIME: 00:00:00 UTC</span>
+    </div>
 
-    <div class="main-scanner">
-        <div id="core-target">
-            <div style="width: 10px; height: 10px; background: #fff;"></div>
+    <div id="crystal-display">
+        <div id="quantum-crystal">
+            <div id="touch-hint">长按<br>校准频率</div>
         </div>
-        <div class="hint-text" id="status">INIT_CAUSALITY_LINK...<br>等待指纹同步</div>
+    </div>
+
+    <div class="control-panel">
+        <div id="status-message">等待个人生物场接入...</div>
     </div>
 
     <div id="result-screen">
-        <div class="file-header">
-            <div style="font-size: 10px;">CONFIDENTIAL DOCUMENT // CAUSALITY NO. 776</div>
-            <div class="file-title">命数映射档案</div>
+        <div class="path-title">个人因果路径图</div>
+        <div class="path-graph">
+            <div class="path-line"></div>
+            <div class="key-point">未来30天关键决策点</div>
+            <div class="blur-effect"></div>
         </div>
-
-        <div class="data-row">
-            <div class="data-label">财富波峰预测</div>
-            <div class="data-val">2026.05.14 - 2026.06.22</div>
+        <div style="font-size: 14px; text-align: center; margin-bottom: 30px; line-height: 1.6;">
+            当前路径图已解锁。未来 30 天内，你将面临一次财富/感情/事业上的重要选择。
+            <br>
+            <span style="color: var(--accent-color);">[ 请注意，选择将重塑未来因果。 ]</span>
         </div>
-        <div class="data-row">
-            <div class="data-label">资产增量级别</div>
-            <div class="data-val">等级：Ω (OMEGA)</div>
-        </div>
-        <div class="data-row">
-            <div class="data-label">地理关联性</div>
-            <div class="data-val">东南 14.2KM</div>
-        </div>
-
-        <div style="margin-top: 20px; font-size: 12px; color: #ff003c; font-weight: bold; border: 1px solid #ff003c; padding: 10px;">
-            ⚠️ 警告：该节点处于坍塌边缘，剩余有效时间 23:58:12
-        </div>
-
-        <button id="cta-btn">申请深度干预协议</button>
+        <button id="cta-button">稳定干预：获取未来 1 年精准路径</button>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script>
-        const target = document.getElementById('core-target');
-        const status = document.getElementById('status');
-        const logs = document.getElementById('log-stream');
-        const screen = document.getElementById('result-screen');
-        
-        // 伪造黑客日志
-        setInterval(() => {
-            const hex = Math.random().toString(16).substr(2, 8);
-            logs.innerHTML = `> ACCESSING_NODE_${hex}... OK<br>` + logs.innerHTML.slice(0, 300);
-        }, 200);
-
         let progress = 0;
         let timer;
+        const crystal = document.getElementById('quantum-crystal');
+        const statusMsg = document.getElementById('status-message');
+        const resultScreen = document.getElementById('result-screen');
+        const locationSpan = document.getElementById('location');
+        const timeSpan = document.getElementById('time');
 
-        const start = (e) => {
+        // 模拟实时时间
+        setInterval(() => {
+            timeSpan.innerText = "TIME: " + moment().utc().format('HH:mm:ss UTC');
+        }, 1000);
+
+        // 模拟位置加载
+        setTimeout(() => {
+            const cities = ['SHANGHAI / 0x4B3A', 'NEW YORK / 0x7D2C', 'LONDON / 0x1A9F', 'TOKYO / 0x8E5B'];
+            locationSpan.innerText = `LOC: ${cities[Math.floor(Math.random() * cities.length)]}`;
+        }, 1500);
+
+
+        const startCalibration = (e) => {
             e.preventDefault();
-            target.style.transform = "scale(0.8) rotate(45deg)";
-            target.style.background = "rgba(255,255,255,0.1)";
-            status.innerText = "数据抓取中...\n量子链路已建立";
-            status.style.color = "#fff";
-
+            if (timer) clearInterval(timer);
+            progress = 0;
+            crystal.style.transform = "scale(0.9) rotateY(180deg)";
+            crystal.style.boxShadow = `0 0 100px var(--main-color), inset 0 0 80px var(--main-color), 0 0 20px var(--accent-color)`;
+            statusMsg.innerText = "正在分析个人生物能量场...";
+            
             timer = setInterval(() => {
                 progress += 2;
-                if(progress >= 100) {
+                if (progress >= 100) {
                     clearInterval(timer);
-                    screen.style.display = "flex";
+                    showResult();
                 }
             }, 50);
         };
 
-        const stop = () => {
+        const stopCalibration = () => {
             clearInterval(timer);
-            if(progress < 100) {
+            if (progress < 100) {
                 progress = 0;
-                target.style.transform = "none";
-                target.style.background = "none";
-                status.innerText = "同步失败\n链接已重置";
-                status.style.color = "#666";
+                crystal.style.transform = "scale(1)";
+                crystal.style.boxShadow = `0 0 80px var(--main-color), inset 0 0 50px var(--main-color)`;
+                statusMsg.innerText = "校准中断：请重新长按。";
             }
         };
 
-        target.addEventListener('touchstart', start);
-        target.addEventListener('touchend', stop);
-        target.addEventListener('mousedown', start);
-        target.addEventListener('mouseup', stop);
-        
-        document.getElementById('cta-btn').onclick = () => {
-            alert("正在生成物理密钥...\n请将此档案截图发送给命运管理员。");
+        function showResult() {
+            document.body.style.overflow = 'auto'; // 允许滚动
+            resultScreen.style.display = 'flex';
+        }
+
+        crystal.addEventListener('touchstart', startCalibration);
+        crystal.addEventListener('touchend', stopCalibration);
+        crystal.addEventListener('mousedown', startCalibration);
+        crystal.addEventListener('mouseup', stopCalibration);
+
+        document.getElementById('cta-button').onclick = () => {
+            alert("正在申请高维协议...\n请联系命运干预协调员（微信：xxxx）获取权限。");
         };
     </script>
 </body>
