@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Matrix Destiny Mapping - UI Overlay</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: #FFD700; }
+        
+        /* App 框架样式 */
+        #app-ui { position: absolute; inset: 0; pointer-events: none; border: 20px solid rgba(255, 215, 0, 0.1); box-sizing: border-box; }
+        .panel { position: absolute; padding: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 215, 0, 0.3); backdrop-filter: blur(5px); }
+        
+        #top-info { top: 40px; left: 40px; }
+        #bottom-panel { bottom: 40px; left: 40px; width: 280px; }
+        #data-stream { top: 40px; right: 40px; text-align: right; font-size: 10px; opacity: 0.5; }
+        
+        .glitch { animation: glitch 1s linear infinite; }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-ui">
+    <div id="top-info" class="panel">
+        <div style="font-size: 18px; font-weight: bold;">DESTINY_MAPPING_V1.0</div>
+        <div id="scan-status" style="font-size: 12px; margin-top: 5px;">SCANNING QUANTUM FIELD...</div>
+    </div>
+
+    <div id="data-stream">
+        </div>
+
+    <div id="bottom-panel" class="panel">
+        <div style="color: #FF8C00; font-size: 14px;">[ 实时运势天气预报 ]</div>
+        <div id="weather-text" style="font-size: 12px; margin-top: 10px; line-height: 1.5;">
+            当前磁场处于“收缩期”<br>
+            建议保持沉默，减少能量损耗...
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    // 逻辑保持之前的生命晶体，但加入 UI 联动
+    let scene, camera, renderer, crystal;
+    let clock = new THREE.Clock();
+
+    init();
+    animate();
+
+    function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 8;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // 创建不规则晶体结构
+        const geometry = new THREE.IcosahedronGeometry(2.5, 4); 
+        const material = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, blending: THREE.AdditiveBlending });
+        
+        const count = geometry.attributes.position.count;
+        const colors = new Float32Array(count * 3);
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        crystal = new THREE.Points(geometry, material);
+        scene.add(crystal);
+
+        // 模拟右侧数据流
+        setInterval(() => {
+            const stream = document.getElementById('data-stream');
+            const code = Math.random().toString(16).substring(2, 10).toUpperCase();
+            stream.innerHTML = code + '<br>' + stream.innerHTML.split('<br>').slice(0, 20).join('<br>');
+        }, 100);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+        
+        const colors = crystal.geometry.attributes.color.array;
+        for (let i = 0; i < colors.length; i += 3) {
+            const mix = Math.sin(t + i*0.1) * 0.5 + 0.5;
+            // 紫色(0.3, 0, 0.5) 到 金色(1, 0.84, 0)
+            colors[i] = THREE.MathUtils.lerp(0.3, 1.0, mix);
+            colors[i+1] = THREE.MathUtils.lerp(0, 0.84, mix);
+            colors[i+2] = THREE.MathUtils.lerp(0.5, 0, mix);
+        }
+        crystal.geometry.attributes.color.needsUpdate = true;
+        
+        crystal.rotation.y += 0.003;
+        crystal.rotation.z += 0.002;
+        renderer.render(scene, camera);
+    }
+</script>
+</body>
+</html>
