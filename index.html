@@ -3,127 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>因果之镜</title>
+    <title>THE ORACLE</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #0a0a0a; font-family: "Noto Serif SC", serif; }
+        :root { --accent: #FFD700; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Times New Roman", serif; }
+        body { background: #000; color: #fff; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
 
-        /* 背景烟氲 */
-        #smoke-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, #151515 0%, #000 100%); z-index: 1; }
-
-        /* 碎片文字容器 */
-        #fragment-container { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-        .fragment { position: absolute; color: rgba(255,255,255,0.15); font-size: 24px; transition: all 2s ease-in-out; }
-
-        /* 核心光晕 */
-        #void-core { 
-            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
-            width: 260px; height: 260px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-            display: flex; justify-content: center; align-items: center; z-index: 10;
-            transition: 0.5s; cursor: pointer;
+        /* 1像素裂缝 */
+        #crack {
+            width: 1px; height: 150px; background: #fff;
+            box-shadow: 0 0 20px #fff;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer; position: relative;
         }
-        #void-core.active { background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); scale: 1.2; filter: blur(2px); }
-
-        /* 底部引导文案 */
-        .footer { position: absolute; bottom: 60px; width: 100%; text-align: center; z-index: 20; }
-        .hint { color: rgba(255,255,255,0.3); font-size: 14px; letter-spacing: 10px; margin-bottom: 30px; }
-        
-        /* 最终判词层 */
-        #verdict-layer { 
-            display: none; position: fixed; inset: 0; background: #000; z-index: 100;
-            flex-direction: column; justify-content: center; align-items: center; padding: 40px;
+        #crack::after {
+            content: 'TOUCH THE GAP'; position: absolute; bottom: -40px; left: 50%;
+            transform: translateX(-50%); font-size: 10px; letter-spacing: 5px;
+            white-space: nowrap; opacity: 0.3;
         }
-        .verdict-text { color: #fff; font-size: 28px; letter-spacing: 5px; line-height: 2; text-align: center; }
-        .red-dot { width: 8px; height: 8px; background: #bc002d; border-radius: 50%; margin: 30px 0; box-shadow: 0 0 15px #bc002d; }
-        .action-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 15px 40px; letter-spacing: 5px; font-size: 12px; margin-top: 40px; cursor: pointer; }
+
+        /* 震撼波纹 */
+        #wave {
+            position: fixed; inset: 0; pointer-events: none;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            display: none; opacity: 0; z-index: 100;
+        }
+
+        /* 结果页：极简白 */
+        #result {
+            position: fixed; inset: 0; background: #fff; color: #000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 200; padding: 40px;
+        }
+        .date-big { font-size: 64px; font-weight: 900; letter-spacing: -2px; margin-bottom: 10px; }
+        .sub-text { font-size: 14px; letter-spacing: 2px; color: #888; text-transform: uppercase; }
+        .red-seal { width: 40px; height: 40px; background: #ff003c; margin-top: 50px; transform: rotate(45deg); }
+
+        /* 环境数据流 */
+        #data-stream {
+            position: absolute; top: 20px; left: 20px; font-size: 9px; 
+            color: #333; line-height: 1.5; font-family: monospace;
+        }
     </style>
 </head>
 <body>
-    <div id="smoke-bg"></div>
-    <div id="fragment-container"></div>
 
-    <div id="void-core">
-        <div style="color:rgba(255,255,255,0.2); font-size: 12px; letter-spacing: 2px;">凝神·长按</div>
-    </div>
+    <div id="data-stream"></div>
+    <div id="crack"></div>
+    <div id="wave"></div>
 
-    <div class="footer">
-        <div class="hint">窥视因果</div>
-    </div>
-
-    <div id="verdict-layer">
-        <div class="verdict-text">
-            <p>财帛动</p>
-            <p>因缘生</p>
-            <p style="font-size: 16px; opacity: 0.5; margin-top: 10px;">2026·四月之望</p>
-        </div>
-        <div class="red-dot"></div>
-        <div style="color:rgba(255,255,255,0.4); font-size: 13px; text-align: center; line-height: 1.8;">
-            宿命之轮已于此处停留。<br>若欲取之，须正因果。
-        </div>
-        <button class="action-btn" onclick="location.reload()">求破解之法</button>
+    <div id="result">
+        <div class="sub-text">Causality Node Locked</div>
+        <div class="date-big" id="final-date">2026.05.19</div>
+        <p style="text-align: center; line-height: 2; font-weight: bold;">资产位面即将发生剧烈跃迁</p>
+        <div class="red-seal"></div>
+        <button onclick="location.reload()" style="margin-top: 60px; background: none; border: 1px solid #ddd; padding: 10px 30px; font-size: 10px; letter-spacing: 3px;">RE-SYNC</button>
     </div>
 
     <script>
-        const container = document.getElementById('fragment-container');
-        const core = document.getElementById('void-core');
-        const verdict = document.getElementById('verdict-layer');
-        const chars = "金木水火土因果命数运势财缘劫起终无有";
-        const fragments = [];
+        const crack = document.getElementById('crack');
+        const wave = document.getElementById('wave');
+        const result = document.getElementById('result');
+        const stream = document.getElementById('data-stream');
 
-        // 初始化随机碎片
-        for (let i = 0; i < 30; i++) {
-            const f = document.createElement('div');
-            f.className = 'fragment';
-            f.innerText = chars[Math.floor(Math.random() * chars.length)];
-            resetFragment(f);
-            container.appendChild(f);
-            fragments.push(f);
-        }
+        // 模拟实时环境数据
+        setInterval(() => {
+            const lat = (Math.random() * 0.01 + 31.23).toFixed(4);
+            const lng = (Math.random() * 0.01 + 121.47).toFixed(4);
+            stream.innerHTML = `GPS: ${lat} / ${lng}<br>ENTROPY: ${Math.random().toFixed(8)}<br>SYNC_STATUS: ACTIVE`;
+        }, 100);
 
-        function resetFragment(f) {
-            f.style.left = Math.random() * 100 + "%";
-            f.style.top = Math.random() * 100 + "%";
-            f.style.opacity = Math.random() * 0.2;
-            f.style.transform = `rotate(${Math.random() * 360}deg) scale(${Math.random() * 0.5 + 0.5})`;
-        }
+        // 陀螺仪互动
+        window.addEventListener('deviceorientation', (e) => {
+            const rot = e.gamma;
+            crack.style.transform = `rotate(${rot}deg)`;
+        });
 
-        let timer;
-        let progress = 0;
-
-        const start = (e) => {
+        // 点击触发
+        crack.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            core.classList.add('active');
-            // 碎片向中心汇聚
-            fragments.forEach(f => {
-                f.style.left = "50%";
-                f.style.top = "45%";
-                f.style.opacity = "0.8";
-                f.style.transform = "rotate(0deg) scale(0)";
-            });
-
-            timer = setInterval(() => {
-                progress += 1;
-                if (progress >= 100) {
-                    clearInterval(timer);
-                    verdict.style.display = 'flex';
-                }
-            }, 30);
-        };
-
-        const stop = () => {
-            clearInterval(timer);
-            if (progress < 100) {
-                progress = 0;
-                core.classList.remove('active');
-                fragments.forEach(f => resetFragment(f));
-            }
-        };
-
-        core.addEventListener('touchstart', start);
-        core.addEventListener('touchend', stop);
-        core.addEventListener('mousedown', start);
-        core.addEventListener('mouseup', stop);
+            crack.style.height = "100vh";
+            crack.style.width = "100vw";
+            crack.style.background = "var(--accent)";
+            
+            setTimeout(() => {
+                result.style.display = 'flex';
+            }, 600);
+        });
     </script>
 </body>
 </html>
