@@ -3,143 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DESTINY_TERMINAL_V8</title>
+    <title>DESTINY_DRIVE_V10</title>
     <style>
-        :root { --glow: #00f2ff; --bg: #050505; }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: 'PingFang SC', sans-serif; overflow: hidden; height: 100vh; }
+        :root { --neon: #00ff41; --danger: #ff0055; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Orbitron', sans-serif; }
+        body { background: #000; color: var(--neon); overflow: hidden; height: 100vh; }
 
-        /* 背景流光 */
-        #bg-effect { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%); z-index: 1; }
+        /* 扫描线效果 */
+        #scanner { position: fixed; top: 0; width: 100%; height: 5px; background: rgba(0,255,65,0.2); z-index: 100; animation: scan 3s linear infinite; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+
+        /* 动态仪表 */
+        .dashboard { position: absolute; top: 40px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; z-index: 10; }
+        .stat-box { border: 1px solid var(--neon); padding: 10px; min-width: 100px; text-align: center; background: rgba(0,255,65,0.05); }
+        .stat-label { font-size: 8px; opacity: 0.6; }
+        .stat-val { font-size: 16px; font-weight: bold; }
+
+        /* 核心感应区：交互战场 */
+        #game-zone { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; }
+        #core-sensor { 
+            width: 200px; height: 200px; border-radius: 50%; border: 4px solid var(--neon);
+            display: flex; justify-content: center; align-items: center; transition: 0.2s;
+            background: radial-gradient(circle, rgba(0,255,65,0.1) 0%, transparent 70%);
+            z-index: 50;
+        }
         
-        /* 顶部状态：大而清晰 */
-        .top-bar { position: absolute; top: 40px; left: 25px; z-index: 10; border-left: 4px solid var(--glow); padding-left: 15px; }
-        .top-bar h1 { font-size: 28px; letter-spacing: 2px; font-weight: 900; }
-        .top-bar p { font-size: 12px; color: var(--glow); opacity: 0.7; margin-top: 5px; font-family: monospace; }
-
-        /* 中心传感器：视觉核心 */
-        .scanner-box { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); z-index: 5; text-align: center; }
-        #core-ring { 
-            width: 280px; height: 280px; border-radius: 50%; 
-            border: 2px solid rgba(0, 242, 255, 0.1);
-            display: flex; justify-content: center; align-items: center;
-            position: relative; transition: 0.3s;
-        }
-        .ring-inner { width: 80%; height: 80%; border: 1px dashed var(--glow); border-radius: 50%; animation: spin 10s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        
-        #scan-hint { position: absolute; font-size: 18px; color: var(--glow); font-weight: bold; text-shadow: 0 0 10px var(--glow); }
-
-        /* 底部操作面板：大按钮、磨砂感 */
-        .bottom-ui { 
-            position: absolute; bottom: 30px; left: 20px; right: 20px; 
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 30px; z-index: 20;
-        }
-        .status-tag { font-size: 12px; color: var(--glow); margin-bottom: 10px; display: block; }
-        .main-msg { font-size: 20px; font-weight: bold; line-height: 1.4; margin-bottom: 20px; }
-
-        /* 震撼的进度条 */
-        .progress-container { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
-        #bar { width: 0%; height: 100%; background: var(--glow); box-shadow: 0 0 15px var(--glow); transition: 0.1s; }
-
-        /* 结果展示：全屏覆盖 */
-        #result-overlay { 
-            display: none; position: fixed; inset: 0; background: #000; z-index: 100; 
-            flex-direction: column; justify-content: center; align-items: center; padding: 40px;
-        }
-        .result-title { font-size: 40px; color: #FFD700; font-weight: 900; margin-bottom: 20px; text-align: center; }
-        .result-data { font-size: 16px; line-height: 1.8; color: #ccc; text-align: center; margin-bottom: 40px; }
-        
-        .big-btn { 
-            width: 100%; padding: 22px; background: linear-gradient(90deg, #00f2ff, #0072ff); 
-            border: none; border-radius: 16px; color: #fff; font-size: 20px; font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0, 242, 255, 0.3);
+        /* 干扰粒子 */
+        .glitch-particle { 
+            position: absolute; width: 40px; height: 40px; background: var(--danger); 
+            border-radius: 50%; filter: blur(10px); z-index: 60; cursor: pointer;
         }
 
+        /* 底部引导 */
+        .footer { position: absolute; bottom: 50px; width: 100%; text-align: center; z-index: 10; padding: 0 40px; }
+        .hint { font-size: 12px; margin-bottom: 15px; text-shadow: 0 0 5px var(--neon); }
+        #main-btn { 
+            width: 100%; height: 60px; background: var(--neon); color: #000; 
+            border: none; font-weight: 900; letter-spacing: 5px; cursor: pointer;
+        }
+
+        /* 结算弹窗：极简、有力 */
+        #overlay { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
+            z-index: 200; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
+        }
+        .result-rank { font-size: 80px; font-weight: 900; color: #fff; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div id="bg-effect"></div>
+    <div id="scanner"></div>
 
-    <div class="top-bar">
-        <h1>因果观测站</h1>
-        <p>CAUSALITY_MONITOR_SESS: 8829</p>
-    </div>
-
-    <div class="scanner-box">
-        <div id="core-ring">
-            <div class="ring-inner"></div>
-            <div id="scan-hint">长按对齐指纹</div>
+    <div class="dashboard">
+        <div class="stat-box">
+            <div class="stat-label">稳定度 (STB)</div>
+            <div class="stat-val" id="stb-val">99%</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">算力 (CALC)</div>
+            <div class="stat-val" id="calc-val">0</div>
         </div>
     </div>
 
-    <div class="bottom-ui">
-        <span class="status-tag">● 正在监听财富纠缠频率</span>
-        <div class="main-msg" id="msg">请将指纹放置在中心感应区，我们将提取你未来12个月的财富波动...</div>
-        <div class="progress-container">
-            <div id="bar"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 12px; opacity: 0.5;">
-            <span>SYNCING...</span>
-            <span id="percent">0%</span>
-        </div>
+    <div id="game-zone">
+        <div id="core-sensor">HOLD</div>
     </div>
 
-    <div id="result-overlay">
-        <div class="result-title">发现财富奇点</div>
-        <div class="result-data">
-            经量子演算，你在 <span style="color:#FFD700; font-size:24px;">2026年5月</span> 存在一次剧烈的资产纠缠爆发。受当前因果律影响，该节点命中率达 <span style="color:#FFD700;">94.8%</span>。
+    <div class="footer">
+        <p class="hint">按住中心点并点击清除红色[因果干扰]以提高预测精度</p>
+        <button id="main-btn">初始化链接</button>
+    </div>
+
+    <div id="overlay">
+        <div class="stat-label">预测结果生成</div>
+        <div class="result-rank" id="rank-tag">S+</div>
+        <div style="font-size: 18px; text-align: center; color: #fff; line-height: 1.6;">
+            你的财富纠缠已突破阈值。<br>
+            <span id="final-date" style="background: var(--neon); color: #000; padding: 0 10px;">2026.06.18</span><br>
+            因果扭转成功，该节点溢出率达 420%。
         </div>
-        <button class="big-btn" onclick="location.reload()">解锁完整年度分析</button>
+        <button onclick="location.reload()" style="margin-top:40px; background:none; border: 1px solid #fff; color:#fff; padding: 15px 40px;">再次提升稳定性</button>
     </div>
 
     <script>
-        let progress = 0;
-        let timer;
-        const ring = document.getElementById('core-ring');
-        const bar = document.getElementById('bar');
-        const percent = document.getElementById('percent');
-        const msg = document.getElementById('msg');
-        const overlay = document.getElementById('result-overlay');
+        let isHolding = false;
+        let stability = 99;
+        let score = 0;
+        let gameTimer;
+
+        const sensor = document.getElementById('core-sensor');
+        const stbText = document.getElementById('stb-val');
+        const calcText = document.getElementById('calc-val');
+        const overlay = document.getElementById('overlay');
+
+        function createGlitch() {
+            if(!isHolding) return;
+            const glitch = document.createElement('div');
+            glitch.className = 'glitch-particle';
+            glitch.style.left = Math.random() * 80 + 10 + "%";
+            glitch.style.top = Math.random() * 80 + 10 + "%";
+            document.body.appendChild(glitch);
+
+            glitch.onclick = () => {
+                score += 150;
+                stability = Math.min(stability + 5, 100);
+                glitch.remove();
+            };
+
+            setTimeout(() => {
+                if(glitch.parentNode) {
+                    glitch.remove();
+                    stability -= 10;
+                }
+            }, 1000);
+        }
 
         const start = (e) => {
             e.preventDefault();
-            ring.style.transform = "translate(-50%, -50%) scale(0.9)";
-            ring.style.borderColor = "#00f2ff";
-            ring.style.boxShadow = "0 0 60px rgba(0, 242, 255, 0.4)";
-            
-            timer = setInterval(() => {
-                if(progress < 100) {
-                    progress += 1.5;
-                    bar.style.width = progress + "%";
-                    percent.innerText = Math.floor(progress) + "%";
-                    msg.innerText = "正在向高维节点发送请求，请勿松开手指...";
-                } else {
-                    clearInterval(timer);
-                    overlay.style.display = 'flex';
-                }
-            }, 30);
+            isHolding = true;
+            sensor.style.transform = "scale(1.2)";
+            sensor.innerText = "SYNCING";
+            gameTimer = setInterval(() => {
+                score += 10;
+                updateUI();
+                if(Math.random() > 0.7) createGlitch();
+                if(score > 5000) endGame();
+            }, 100);
         };
 
         const stop = () => {
-            clearInterval(timer);
-            if(progress < 100) {
-                progress = 0;
-                bar.style.width = "0%";
-                percent.innerText = "0%";
-                ring.style.transform = "translate(-50%, -50%) scale(1)";
-                ring.style.boxShadow = "none";
-                msg.innerText = "同步中断。请重新长按中心感应区以确认识别。";
-            }
+            isHolding = false;
+            clearInterval(gameTimer);
+            score = 0;
+            stability = 99;
+            sensor.style.transform = "scale(1)";
+            sensor.innerText = "HOLD";
+            updateUI();
         };
 
-        ring.addEventListener('touchstart', start);
-        ring.addEventListener('touchend', stop);
-        ring.addEventListener('mousedown', start);
-        ring.addEventListener('mouseup', stop);
+        function updateUI() {
+            stbText.innerText = stability + "%";
+            calcText.innerText = score;
+            if(stability <= 0) endGame();
+        }
+
+        function endGame() {
+            overlay.style.display = 'flex';
+            const rank = stability > 80 ? "SSS" : stability > 50 ? "A" : "D";
+            document.getElementById('rank-tag').innerText = rank;
+        }
+
+        sensor.addEventListener('touchstart', start);
+        sensor.addEventListener('touchend', stop);
+        sensor.addEventListener('mousedown', start);
+        sensor.addEventListener('mouseup', stop);
     </script>
 </body>
 </html>
