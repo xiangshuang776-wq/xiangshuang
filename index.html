@@ -3,93 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE ORACLE</title>
+    <title>CAUSALITY_FM</title>
     <style>
-        :root { --accent: #FFD700; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Times New Roman", serif; }
-        body { background: #000; color: #fff; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        :root { --neon: #00ff88; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #08080a; color: #fff; overflow: hidden; height: 100vh; }
 
-        /* 1像素裂缝 */
-        #crack {
-            width: 1px; height: 150px; background: #fff;
-            box-shadow: 0 0 20px #fff;
-            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer; position: relative;
-        }
-        #crack::after {
-            content: 'TOUCH THE GAP'; position: absolute; bottom: -40px; left: 50%;
-            transform: translateX(-50%); font-size: 10px; letter-spacing: 5px;
-            white-space: nowrap; opacity: 0.3;
-        }
+        /* 背景流光 */
+        #bg-glow { position: fixed; width: 200vw; height: 200vh; background: radial-gradient(circle at center, #1a1a2e 0%, #000 70%); top: -50%; left: -50%; z-index: 1; transition: 0.5s ease; }
 
-        /* 震撼波纹 */
-        #wave {
-            position: fixed; inset: 0; pointer-events: none;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            display: none; opacity: 0; z-index: 100;
-        }
+        /* 顶部数据流 */
+        .top-meta { position: absolute; top: 30px; left: 30px; font-size: 10px; font-family: monospace; opacity: 0.4; letter-spacing: 2px; line-height: 1.5; z-index: 10; }
 
-        /* 结果页：极简白 */
-        #result {
-            position: fixed; inset: 0; background: #fff; color: #000;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 200; padding: 40px;
-        }
-        .date-big { font-size: 64px; font-weight: 900; letter-spacing: -2px; margin-bottom: 10px; }
-        .sub-text { font-size: 14px; letter-spacing: 2px; color: #888; text-transform: uppercase; }
-        .red-seal { width: 40px; height: 40px; background: #ff003c; margin-top: 50px; transform: rotate(45deg); }
+        /* 调频转盘 */
+        .tuner-container { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
+        #tuner-wheel { width: 300px; height: 300px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; position: relative; }
+        #pointer { width: 2px; height: 120px; background: linear-gradient(to top, var(--neon), transparent); transform-origin: bottom center; transition: 0.1s; }
+        
+        .hint-text { margin-top: 50px; font-size: 12px; letter-spacing: 5px; color: var(--neon); text-shadow: 0 0 10px var(--neon); text-align: center; }
 
-        /* 环境数据流 */
-        #data-stream {
-            position: absolute; top: 20px; left: 20px; font-size: 9px; 
-            color: #333; line-height: 1.5; font-family: monospace;
-        }
+        /* 结果层 */
+        #result-layer { display: none; position: fixed; inset: 0; background: #fff; color: #000; z-index: 100; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .big-time { font-size: 50px; font-weight: 900; letter-spacing: -2px; margin: 20px 0; }
+        .tag { background: #000; color: #fff; padding: 5px 15px; font-size: 10px; font-weight: bold; margin-bottom: 20px; }
+        #re-tuner { margin-top: 60px; padding: 15px 40px; border: 1px solid #000; background: none; font-weight: bold; letter-spacing: 3px; }
     </style>
 </head>
 <body>
+    <div id="bg-glow"></div>
+    <div class="top-meta">
+        LAT_NODE: 31.23N<br>
+        LNG_NODE: 121.47E<br>
+        ENCRYPTION: AES_256<br>
+        STATUS: SNIFFING...
+    </div>
 
-    <div id="data-stream"></div>
-    <div id="crack"></div>
-    <div id="wave"></div>
+    <div class="tuner-container">
+        <div id="tuner-wheel">
+            <div id="pointer"></div>
+        </div>
+        <div class="hint-text" id="status-msg">缓慢滑动屏幕 · 对焦因果频率</div>
+    </div>
 
-    <div id="result">
-        <div class="sub-text">Causality Node Locked</div>
-        <div class="date-big" id="final-date">2026.05.19</div>
-        <p style="text-align: center; line-height: 2; font-weight: bold;">资产位面即将发生剧烈跃迁</p>
-        <div class="red-seal"></div>
-        <button onclick="location.reload()" style="margin-top: 60px; background: none; border: 1px solid #ddd; padding: 10px 30px; font-size: 10px; letter-spacing: 3px;">RE-SYNC</button>
+    <div id="result-layer">
+        <div class="tag">FREQUENCY_MATCH_SUCCESS</div>
+        <div style="font-size: 14px; opacity: 0.6;">距离你的下一次财富极值点</div>
+        <div class="big-time">143天 08:22:15</div>
+        <p style="font-size: 14px; line-height: 1.8; max-width: 280px;"><b>[ 命中批注 ]</b><br>此时空节点正在坍缩，请确保你的能量场保持开放。已为你锁定干预协议。</p>
+        <button id="re-tuner" onclick="location.reload()">重新捕获</button>
     </div>
 
     <script>
-        const crack = document.getElementById('crack');
-        const wave = document.getElementById('wave');
-        const result = document.getElementById('result');
-        const stream = document.getElementById('data-stream');
+        let touchStart = 0;
+        let currentRotation = 0;
+        let matchScore = 0;
+        const pointer = document.getElementById('pointer');
+        const glow = document.getElementById('bg-glow');
+        const statusMsg = document.getElementById('status-msg');
+        const result = document.getElementById('result-layer');
 
-        // 模拟实时环境数据
-        setInterval(() => {
-            const lat = (Math.random() * 0.01 + 31.23).toFixed(4);
-            const lng = (Math.random() * 0.01 + 121.47).toFixed(4);
-            stream.innerHTML = `GPS: ${lat} / ${lng}<br>ENTROPY: ${Math.random().toFixed(8)}<br>SYNC_STATUS: ACTIVE`;
-        }, 100);
-
-        // 陀螺仪互动
-        window.addEventListener('deviceorientation', (e) => {
-            const rot = e.gamma;
-            crack.style.transform = `rotate(${rot}deg)`;
+        window.addEventListener('touchstart', (e) => {
+            touchStart = e.touches[0].clientX;
         });
 
-        // 点击触发
-        crack.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            crack.style.height = "100vh";
-            crack.style.width = "100vw";
-            crack.style.background = "var(--accent)";
-            
-            setTimeout(() => {
-                result.style.display = 'flex';
-            }, 600);
+        window.addEventListener('touchmove', (e) => {
+            let delta = e.touches[0].clientX - touchStart;
+            currentRotation += delta * 0.5;
+            pointer.style.transform = `rotate(${currentRotation}deg)`;
+            touchStart = e.touches[0].clientX;
+
+            // 模拟对焦感
+            let focus = Math.abs(currentRotation % 360);
+            if(focus > 170 && focus < 190) { // 设定180度为“对焦点”
+                matchScore += 2;
+                statusMsg.innerText = "信号增强：正在捕获核心...";
+                glow.style.background = `radial-gradient(circle at center, #00ff8844 0%, #000 70%)`;
+                if(matchScore > 100) showResult();
+            } else {
+                matchScore = Math.max(0, matchScore - 1);
+                statusMsg.innerText = "杂音干扰：继续调整频率";
+                glow.style.background = `radial-gradient(circle at center, #1a1a2e 0%, #000 70%)`;
+            }
         });
+
+        function showResult() {
+            result.style.display = 'flex';
+            // 简单的触觉震动提示
+            if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 200]);
+        }
     </script>
 </body>
 </html>
