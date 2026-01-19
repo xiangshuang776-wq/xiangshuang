@@ -3,137 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MATRIX DESTINY - V4.0</title>
+    <title>DESTINY_WEALTH_MONITOR</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'PingFang SC', 'STHeiti', sans-serif; }
+        body { background: #000; color: #ff0033; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #scan-line { position: absolute; width: 100%; height: 2px; background: rgba(255, 0, 51, 0.5); z-index: 100; top: -10px; animation: scan 3s linear infinite; }
+        @keyframes scan { from { top: 0%; } to { top: 100%; } }
 
-        /* 沉浸式 UI 容器 */
-        #ui-overlay { 
-            position: absolute; inset: 0; z-index: 10; pointer-events: none;
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 40px 25px; 
-        }
+        /* 顶部黑客流 */
+        #code-bg { position: absolute; top: 10px; left: 10px; font-size: 9px; opacity: 0.4; pointer-events: none; z-index: 5; }
 
-        /* 顶部标题栏 */
-        .header { border-left: 3px solid #FFD700; padding-left: 15px; }
-        .header h1 { color: #FFD700; font-size: 24px; letter-spacing: 4px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .header p { color: #FFD700; opacity: 0.6; font-size: 10px; font-family: monospace; }
+        #main-container { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; padding: 20px; text-align: center; }
 
-        /* 底部运营面板 */
-        .weather-panel {
-            background: rgba(15, 15, 15, 0.85);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 15px; padding: 25px;
-            pointer-events: auto; /* 允许点击 */
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-        }
+        /* 核心晶体 */
+        #crystal-core { width: 250px; height: 250px; border: 1px solid #ff0033; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 50px rgba(255, 0, 51, 0.2); transition: 0.3s; pointer-events: auto; }
+        #crystal-core.active { transform: scale(1.1); box-shadow: 0 0 100px #ff0033; background: rgba(255, 0, 51, 0.1); }
 
-        .status-badge { display: inline-block; background: rgba(255,215,0,0.1); border: 1px solid #FFD700; color: #FFD700; font-size: 11px; padding: 3px 10px; border-radius: 4px; margin-bottom: 12px; }
-        .weather-title { font-size: 22px; color: #FFD700; font-weight: bold; margin-bottom: 10px; }
-        .weather-desc { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 20px; }
+        /* 底部面板 */
+        .bottom-panel { position: absolute; bottom: 40px; width: 90%; background: rgba(20, 0, 0, 0.9); border: 1px solid #ff0033; padding: 25px; backdrop-filter: blur(10px); }
+        .title { font-size: 20px; font-weight: bold; letter-spacing: 5px; margin-bottom: 10px; }
+        .desc { font-size: 14px; color: #ccc; line-height: 1.5; margin-bottom: 20px; }
 
-        /* 关键运营按钮 */
-        #unlock-btn {
-            width: 100%; background: linear-gradient(45deg, #FFD700, #FF8C00);
-            color: #000; border: none; border-radius: 12px;
-            padding: 18px; font-size: 18px; font-weight: 900;
-            cursor: pointer; box-shadow: 0 4px 20px rgba(255, 140, 0, 0.4);
-            animation: breathe 2s infinite ease-in-out;
-        }
-
-        @keyframes breathe {
-            0% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.02); opacity: 1; box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
-            100% { transform: scale(1); opacity: 0.9; }
-        }
+        /* 震撼按钮 */
+        #pay-btn { width: 100%; padding: 18px; background: #ff0033; color: #fff; border: none; font-weight: bold; font-size: 18px; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
+    <div id="scan-line"></div>
+    <div id="code-bg"></div>
 
-    <div id="canvas-container"></div>
-
-    <div id="ui-overlay">
-        <div class="header">
-            <h1>DESTINY_CORE</h1>
-            <p>QUANTUM FIELD MONITORING... ACTIVE</p>
+    <div id="main-container">
+        <div id="crystal-core">
+            <div id="sync-text" style="font-size: 12px;">长按指纹<br>同步财富频率</div>
         </div>
 
-        <div class="weather-panel">
-            <div class="status-badge">NODE: 0x7F2A_SECURE</div>
-            <div id="main-status" class="weather-title">磁场：[ 量子平稳 ]</div>
-            <p id="main-desc" class="weather-desc">当前时空节点干扰极低，因果同步率 98.2%。建议开启重要人生决策，磁场正处于反馈上升期。</p>
-            
-            <button id="unlock-btn">获取今日深度破解报告</button>
+        <div class="bottom-panel" id="panel">
+            <div class="title" id="status-title">因果节点待接入</div>
+            <p class="desc" id="status-desc">系统已就绪。正在等待用户生物特征输入以建立财富预测模型。请注意，预测结果受当前因果律实时影响。</p>
+            <button id="pay-btn">支付 9.9 能量 · 获取财富波峰报告</button>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, crystal, isHolding = false;
+        const core = document.getElementById('crystal-core');
+        const title = document.getElementById('status-title');
+        const desc = document.getElementById('status-desc');
+        const payBtn = document.getElementById('pay-btn');
+        const codeBg = document.getElementById('code-bg');
 
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
+        // 模拟黑客背景流
+        setInterval(() => {
+            codeBg.innerHTML = Math.random().toString(16).toUpperCase() + "<br>" + codeBg.innerHTML.slice(0, 500);
+        }, 100);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+        let timer;
+        let progress = 0;
 
-            // 创建更密集的粒子晶体
-            const geo = new THREE.IcosahedronGeometry(2, 6); 
-            const mat = new THREE.PointsMaterial({ size: 0.04, vertexColors: true, transparent: true });
-            const count = geo.attributes.position.count;
-            geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-            crystal = new THREE.Points(geo, mat);
-            scene.add(crystal);
-
-            // 按钮逻辑：模拟运营转化
-            document.getElementById('unlock-btn').onclick = () => {
-                alert("【权限锁定】\n深度解析报告需消耗 10 能量值。\n请长按下方[二维码]联系命运管理员。");
-            };
-
-            // 交互逻辑
-            const start = () => { 
-                isHolding = true; 
-                document.getElementById('main-status').innerText = "磁场：[ 强力干扰 ]";
-                document.getElementById('main-status').style.color = "#FF8C00";
-            };
-            const end = () => { 
-                isHolding = false; 
-                document.getElementById('main-status').innerText = "磁场：[ 量子平稳 ]";
-                document.getElementById('main-status').style.color = "#FFD700";
-            };
-            window.addEventListener('touchstart', start); window.addEventListener('touchend', end);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const t = Date.now() * 0.001;
-            const colors = crystal.geometry.attributes.color.array;
-
-            for (let i = 0; i < colors.length; i += 3) {
-                if (isHolding) {
-                    colors[i] = 1; colors[i+1] = 0.4; colors[i+2] = 0;
-                } else {
-                    const mix = Math.sin(t + i * 0.01) * 0.5 + 0.5;
-                    colors[i] = 0.3 + mix * 0.7; // 金色通道
-                    colors[i+1] = mix * 0.8;
-                    colors[i+2] = 0.4;
+        const startSync = () => {
+            core.classList.add('active');
+            title.innerText = "正在分析资产纠缠...";
+            timer = setInterval(() => {
+                progress += 2;
+                desc.innerText = `数据分析中: ${progress}% \n已检索 1024 个过去财富节点...\n正在演算未来收益偏移量...`;
+                if (progress >= 100) {
+                    clearInterval(timer);
+                    showResult();
                 }
+            }, 50);
+        };
+
+        const stopSync = () => {
+            if (progress < 100) {
+                clearInterval(timer);
+                progress = 0;
+                core.classList.remove('active');
+                title.innerText = "同步中断";
+                desc.innerText = "生物频率信号丢失，请重新长按中心晶体进行采样。";
             }
-            crystal.geometry.attributes.color.needsUpdate = true;
-            crystal.rotation.y += 0.003;
-            renderer.render(scene, camera);
+        };
+
+        function showResult() {
+            core.style.display = 'none';
+            title.innerText = "发现极端财富信号";
+            title.style.color = "#FFD700"; // 变成金黄色
+            desc.innerHTML = "<span style='color:#FFD700; font-size:18px;'>[ 演算成功 ]</span><br>在你的财富因果链中发现一个异常爆发点。如果不进行干预，该节点将在 180 天内关闭。";
+            payBtn.style.display = 'block';
         }
 
-        init();
-        animate();
+        core.addEventListener('touchstart', startSync);
+        core.addEventListener('touchend', stopSync);
+        core.addEventListener('mousedown', startSync);
+        core.addEventListener('mouseup', stopSync);
+
+        payBtn.onclick = () => alert("【支付接口】正在连接命运银行...\n请联系命运协调员完成能量充值。");
     </script>
 </body>
 </html>
