@@ -3,100 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DESTINY_WEALTH_MONITOR</title>
+    <title>QUANTUM_SCANNER_V7</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; color: #ff0033; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        :root { --main-cyan: #00f2ff; --warn-red: #ff003c; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: #000; color: var(--main-cyan); font-family: 'Courier New', monospace; overflow: hidden; }
+
+        /* 背景：故障感网格 */
+        #bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,242,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,242,255,0.05) 1px, transparent 1px); background-size: 30px 30px; z-index: 1; }
+
+        #main-app { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px; }
+
+        /* 顶部：选择器 */
+        .selector-group { display: flex; justify-content: space-around; gap: 10px; }
+        .node-btn { border: 1px solid var(--main-cyan); padding: 8px 12px; font-size: 10px; opacity: 0.5; transition: 0.3s; }
+        .node-btn.active { opacity: 1; background: rgba(0,242,255,0.1); box-shadow: 0 0 15px var(--main-cyan); }
+
+        /* 中部：核心阵列 */
+        .core-display { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; }
+        #scanner-circle { width: 220px; height: 220px; border: 2px dashed var(--main-cyan); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.5s; animation: rotate 20s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
-        #scan-line { position: absolute; width: 100%; height: 2px; background: rgba(255, 0, 51, 0.5); z-index: 100; top: -10px; animation: scan 3s linear infinite; }
-        @keyframes scan { from { top: 0%; } to { top: 100%; } }
+        .fingerprint-icon { font-size: 40px; margin-bottom: 10px; animation: breathe 1.5s infinite; }
+        @keyframes breathe { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-        /* 顶部黑客流 */
-        #code-bg { position: absolute; top: 10px; left: 10px; font-size: 9px; opacity: 0.4; pointer-events: none; z-index: 5; }
+        /* 底部：控制面板 */
+        .control-panel { background: rgba(0,0,0,0.8); border: 1px solid var(--main-cyan); padding: 20px; backdrop-filter: blur(10px); }
+        .loading-bar { height: 2px; width: 0%; background: var(--main-cyan); margin: 15px 0; transition: 0.1s; box-shadow: 0 0 10px var(--main-cyan); }
+        
+        /* 结果层 (初始隐藏) */
+        #result-layer { display: none; position: absolute; inset: 0; background: #000; z-index: 100; padding: 40px 20px; flex-direction: column; justify-content: center; }
+        .wealth-wave { height: 100px; border-bottom: 1px solid var(--main-cyan); position: relative; margin: 30px 0; overflow: hidden; }
+        .wave-line { position: absolute; width: 200%; height: 100%; background: repeating-linear-gradient(90deg, transparent, transparent 20px, var(--main-cyan) 21px); opacity: 0.2; animation: move 4s linear infinite; }
+        @keyframes move { from { left: -100%; } to { left: 0%; } }
 
-        #main-container { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; padding: 20px; text-align: center; }
-
-        /* 核心晶体 */
-        #crystal-core { width: 250px; height: 250px; border: 1px solid #ff0033; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 50px rgba(255, 0, 51, 0.2); transition: 0.3s; pointer-events: auto; }
-        #crystal-core.active { transform: scale(1.1); box-shadow: 0 0 100px #ff0033; background: rgba(255, 0, 51, 0.1); }
-
-        /* 底部面板 */
-        .bottom-panel { position: absolute; bottom: 40px; width: 90%; background: rgba(20, 0, 0, 0.9); border: 1px solid #ff0033; padding: 25px; backdrop-filter: blur(10px); }
-        .title { font-size: 20px; font-weight: bold; letter-spacing: 5px; margin-bottom: 10px; }
-        .desc { font-size: 14px; color: #ccc; line-height: 1.5; margin-bottom: 20px; }
-
-        /* 震撼按钮 */
-        #pay-btn { width: 100%; padding: 18px; background: #ff0033; color: #fff; border: none; font-weight: bold; font-size: 18px; cursor: pointer; display: none; }
+        #unlock-final { width: 100%; background: var(--main-cyan); color: #000; border: none; padding: 20px; font-weight: 900; font-size: 18px; margin-top: 30px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div id="scan-line"></div>
-    <div id="code-bg"></div>
+    <div id="bg-grid"></div>
 
-    <div id="main-container">
-        <div id="crystal-core">
-            <div id="sync-text" style="font-size: 12px;">长按指纹<br>同步财富频率</div>
+    <div id="main-app">
+        <div class="selector-group">
+            <div class="node-btn active" onclick="selectNode(this, 'WEALTH_PATH')">未来财富走向</div>
+            <div class="node-btn" onclick="selectNode(this, 'RELATION_SYNC')">宿命感情纠缠</div>
+            <div class="node-btn" onclick="selectNode(this, 'CORE_DESIRE')">底层欲望提取</div>
         </div>
 
-        <div class="bottom-panel" id="panel">
-            <div class="title" id="status-title">因果节点待接入</div>
-            <p class="desc" id="status-desc">系统已就绪。正在等待用户生物特征输入以建立财富预测模型。请注意，预测结果受当前因果律实时影响。</p>
-            <button id="pay-btn">支付 9.9 能量 · 获取财富波峰报告</button>
+        <div class="core-display">
+            <div id="scanner-circle">
+                <div class="fingerprint-icon">(( ◈ ))</div>
+                <div style="font-size: 10px; letter-spacing: 2px;">长按同步生物能</div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div id="status-line" style="font-size: 12px;">SYSTEM: STANDBY [AWAITING_INPUT]</div>
+            <div class="loading-bar" id="progress"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 9px; opacity: 0.5;">
+                <span>FREQ: 432HZ</span>
+                <span id="sync-val">SYNC: 0.00%</span>
+            </div>
         </div>
     </div>
 
+    <div id="result-layer">
+        <div style="font-size: 14px; border-left: 3px solid var(--main-cyan); padding-left: 10px;">因果律解析成功</div>
+        <h2 id="res-title" style="margin-top: 20px; font-size: 28px;">财富波峰节点已锁定</h2>
+        <div class="wealth-wave">
+            <div class="wave-line"></div>
+            <div style="position:absolute; top: 10px; left: 20%; color: var(--warn-red); font-size: 10px;">[ !!! 强力偏移点 ]</div>
+        </div>
+        <p id="res-desc" style="font-size: 14px; line-height: 1.8; opacity: 0.8;">检测到 2026 年 Q2 季度存在异常资产波动。该波动受当前量子纠缠影响，可能引发连锁财务反应。建议查阅深度干预报告。</p>
+        <button id="unlock-final">点击解锁 2026 全年因果报告</button>
+    </div>
+
     <script>
-        const core = document.getElementById('crystal-core');
-        const title = document.getElementById('status-title');
-        const desc = document.getElementById('status-desc');
-        const payBtn = document.getElementById('pay-btn');
-        const codeBg = document.getElementById('code-bg');
-
-        // 模拟黑客背景流
-        setInterval(() => {
-            codeBg.innerHTML = Math.random().toString(16).toUpperCase() + "<br>" + codeBg.innerHTML.slice(0, 500);
-        }, 100);
-
-        let timer;
+        let isSyncing = false;
         let progress = 0;
+        let timer;
 
-        const startSync = () => {
-            core.classList.add('active');
-            title.innerText = "正在分析资产纠缠...";
+        function selectNode(el, type) {
+            document.querySelectorAll('.node-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('status-line').innerText = `NODE: ${type} [SELECTED]`;
+        }
+
+        const start = (e) => {
+            e.preventDefault();
+            isSyncing = true;
+            document.getElementById('scanner-circle').style.animation = "rotate 2s linear infinite";
+            document.getElementById('scanner-circle').style.boxShadow = "0 0 50px #00f2ff";
+            
             timer = setInterval(() => {
-                progress += 2;
-                desc.innerText = `数据分析中: ${progress}% \n已检索 1024 个过去财富节点...\n正在演算未来收益偏移量...`;
-                if (progress >= 100) {
+                if(progress < 100) {
+                    progress += 0.5;
+                    updateUI();
+                } else {
                     clearInterval(timer);
-                    showResult();
+                    showFinalResult();
                 }
-            }, 50);
+            }, 20);
         };
 
-        const stopSync = () => {
-            if (progress < 100) {
-                clearInterval(timer);
+        const stop = () => {
+            isSyncing = false;
+            clearInterval(timer);
+            if(progress < 100) {
                 progress = 0;
-                core.classList.remove('active');
-                title.innerText = "同步中断";
-                desc.innerText = "生物频率信号丢失，请重新长按中心晶体进行采样。";
+                updateUI();
+                document.getElementById('scanner-circle').style.animation = "rotate 20s linear infinite";
+                document.getElementById('scanner-circle').style.boxShadow = "none";
             }
         };
 
-        function showResult() {
-            core.style.display = 'none';
-            title.innerText = "发现极端财富信号";
-            title.style.color = "#FFD700"; // 变成金黄色
-            desc.innerHTML = "<span style='color:#FFD700; font-size:18px;'>[ 演算成功 ]</span><br>在你的财富因果链中发现一个异常爆发点。如果不进行干预，该节点将在 180 天内关闭。";
-            payBtn.style.display = 'block';
+        function updateUI() {
+            document.getElementById('progress').style.width = progress + "%";
+            document.getElementById('sync-val').innerText = `SYNC: ${progress.toFixed(2)}%`;
+            document.getElementById('status-line').innerText = progress > 0 ? "ANALYZING BIOMETRIC DATA..." : "SYSTEM: STANDBY [AWAITING_INPUT]";
         }
 
-        core.addEventListener('touchstart', startSync);
-        core.addEventListener('touchend', stopSync);
-        core.addEventListener('mousedown', startSync);
-        core.addEventListener('mouseup', stopSync);
+        function showFinalResult() {
+            document.getElementById('result-layer').style.display = 'flex';
+        }
 
-        payBtn.onclick = () => alert("【支付接口】正在连接命运银行...\n请联系命运协调员完成能量充值。");
+        const core = document.getElementById('scanner-circle');
+        core.addEventListener('touchstart', start);
+        core.addEventListener('touchend', stop);
+        core.addEventListener('mousedown', start);
+        core.addEventListener('mouseup', stop);
+
+        document.getElementById('unlock-final').onclick = () => {
+            alert("正在生成加密PDF报告...\n请联系命运分析师完成身份验证。");
+        };
     </script>
 </body>
 </html>
