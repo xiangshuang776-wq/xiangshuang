@@ -3,140 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CAUSALITY_INTRUSION</title>
+    <title>因果之镜</title>
     <style>
-        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Roboto Mono', monospace; overflow: hidden; height: 100vh; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #0a0a0a; font-family: "Noto Serif SC", serif; }
 
-        /* 全局故障效果 */
-        #glitch-overlay {
-            position: fixed; inset: 0; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect width="2" height="2" fill="white" opacity="0.1"/><rect x="2" y="2" width="2" height="2" fill="white" opacity="0.1"/></svg>');
-            background-size: 4px 4px;
-            pointer-events: none; opacity: 0.05; z-index: 1000; animation: glitchNoise 0.5s infinite alternate;
+        /* 背景烟氲 */
+        #smoke-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, #151515 0%, #000 100%); z-index: 1; }
+
+        /* 碎片文字容器 */
+        #fragment-container { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+        .fragment { position: absolute; color: rgba(255,255,255,0.15); font-size: 24px; transition: all 2s ease-in-out; }
+
+        /* 核心光晕 */
+        #void-core { 
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            width: 260px; height: 260px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            display: flex; justify-content: center; align-items: center; z-index: 10;
+            transition: 0.5s; cursor: pointer;
         }
-        @keyframes glitchNoise { 0% { opacity: 0.05; } 100% { opacity: 0.1; } }
+        #void-core.active { background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); scale: 1.2; filter: blur(2px); }
 
-        /* 扫描线效果 */
-        #scanline { position: fixed; top: 0; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.1); animation: scanlineMove 3s linear infinite; z-index: 999; }
-        @keyframes scanlineMove { 0% { transform: translateY(0vh); } 100% { transform: translateY(100vh); } }
-
-        /* 入场动画 */
-        #intro-message {
-            position: absolute; inset: 0; display: flex; justify-content: center; align-items: center;
-            font-size: 16px; letter-spacing: 2px; text-align: center; color: #f0f0f0;
-            background: #000; transition: opacity 2s ease-out; z-index: 2000;
-        }
-
-        /* 主终端界面 */
-        #terminal { display: none; flex-direction: column; justify-content: space-between; height: 100%; padding: 30px; }
+        /* 底部引导文案 */
+        .footer { position: absolute; bottom: 60px; width: 100%; text-align: center; z-index: 20; }
+        .hint { color: rgba(255,255,255,0.3); font-size: 14px; letter-spacing: 10px; margin-bottom: 30px; }
         
-        /* 顶部数据流 */
-        .data-stream { font-size: 10px; color: #444; height: 80px; overflow: hidden; }
-
-        /* 中心能量核心 */
-        .energy-core { display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; }
-        #energy-display { font-size: 48px; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); animation: pulse 1s infinite alternate; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.05); opacity: 1; } }
-        
-        .hex-grid { position: absolute; width: 300px; height: 300px; animation: rotateGrid 20s linear infinite; }
-        @keyframes rotateGrid { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .hex-grid::before { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M50 0L100 25L100 75L50 100L0 75L0 25Z" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></svg>'); background-size: 50px 50px; opacity: 0.5; }
-
-        /* 底部信息 */
-        .bottom-info { text-align: center; }
-        .bottom-info p { font-size: 12px; line-height: 1.6; color: #aaa; margin-bottom: 20px; }
-        #cta-button { 
-            background: #ff003c; color: #fff; border: none; padding: 18px 30px; font-size: 16px; 
-            font-weight: bold; letter-spacing: 2px; cursor: pointer; animation: ctaPulse 1.5s infinite alternate;
+        /* 最终判词层 */
+        #verdict-layer { 
+            display: none; position: fixed; inset: 0; background: #000; z-index: 100;
+            flex-direction: column; justify-content: center; align-items: center; padding: 40px;
         }
-        @keyframes ctaPulse { 0% { transform: scale(1); box-shadow: 0 0 10px rgba(255,0,60,0.5); } 100% { transform: scale(1.02); box-shadow: 0 0 20px rgba(255,0,60,0.8); } }
+        .verdict-text { color: #fff; font-size: 28px; letter-spacing: 5px; line-height: 2; text-align: center; }
+        .red-dot { width: 8px; height: 8px; background: #bc002d; border-radius: 50%; margin: 30px 0; box-shadow: 0 0 15px #bc002d; }
+        .action-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 15px 40px; letter-spacing: 5px; font-size: 12px; margin-top: 40px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="glitch-overlay"></div>
-    <div id="scanline"></div>
+    <div id="smoke-bg"></div>
+    <div id="fragment-container"></div>
 
-    <div id="intro-message">
-        <span style="border-left: 2px solid #ff003c; padding-left: 10px;">[ 身份识别失败。尝试从因果序列反向接入... ]</span>
+    <div id="void-core">
+        <div style="color:rgba(255,255,255,0.2); font-size: 12px; letter-spacing: 2px;">凝神·长按</div>
     </div>
 
-    <div id="terminal">
-        <div class="data-stream" id="log-display"></div>
+    <div class="footer">
+        <div class="hint">窥视因果</div>
+    </div>
 
-        <div class="energy-core">
-            <div class="hex-grid"></div>
-            <div id="energy-display"></div>
+    <div id="verdict-layer">
+        <div class="verdict-text">
+            <p>财帛动</p>
+            <p>因缘生</p>
+            <p style="font-size: 16px; opacity: 0.5; margin-top: 10px;">2026·四月之望</p>
         </div>
-
-        <div class="bottom-info">
-            <p id="final-message">[ 因果追踪完成 ]</p>
-            <p id="data-display"></p>
-            <button id="cta-button">获取最高权限干预协议</button>
+        <div class="red-dot"></div>
+        <div style="color:rgba(255,255,255,0.4); font-size: 13px; text-align: center; line-height: 1.8;">
+            宿命之轮已于此处停留。<br>若欲取之，须正因果。
         </div>
+        <button class="action-btn" onclick="location.reload()">求破解之法</button>
     </div>
 
     <script>
-        const introMessage = document.getElementById('intro-message');
-        const terminal = document.getElementById('terminal');
-        const logDisplay = document.getElementById('log-display');
-        const energyDisplay = document.getElementById('energy-display');
-        const finalMessage = document.getElementById('final-message');
-        const dataDisplay = document.getElementById('data-display');
-        const ctaButton = document.getElementById('cta-button');
+        const container = document.getElementById('fragment-container');
+        const core = document.getElementById('void-core');
+        const verdict = document.getElementById('verdict-layer');
+        const chars = "金木水火土因果命数运势财缘劫起终无有";
+        const fragments = [];
 
-        // 模拟黑客日志流
-        let logCount = 0;
-        function updateLogStream() {
-            const messages = [
-                `ACCESSING_NODE_ALPHA_${Math.random().toString(16).substr(2, 6).toUpperCase()}`,
-                `DECRYPTING_SIGNAL_FREQ_${Math.random().toString(16).substr(2, 4).toUpperCase()}HZ`,
-                `LOCATING_ENTITY_ID_${Math.random().toString(16).substr(2, 8).toUpperCase()}`,
-                `SCANNING_CAUSALITY_MATRIX_SECTOR_${Math.floor(Math.random() * 99)}`,
-                `STATUS: FRAGMENTED_LINK_DETECTED`,
-                `PULLING_DESTINY_TRACE_${Math.random().toString(16).substr(2, 5).toUpperCase()}`,
-                `WARNING: ANOMALY_LEVEL_${Math.floor(Math.random() * 5)}.2`,
-                `INITIATING_CORE_DECOMPOSITION...`,
-            ];
-            logDisplay.innerHTML += `<div style="color:rgba(255,255,255,0.2);">[ ${logCount++} ] ${messages[Math.floor(Math.random() * messages.length)]}</div>`;
-            logDisplay.scrollTop = logDisplay.scrollHeight;
+        // 初始化随机碎片
+        for (let i = 0; i < 30; i++) {
+            const f = document.createElement('div');
+            f.className = 'fragment';
+            f.innerText = chars[Math.floor(Math.random() * chars.length)];
+            resetFragment(f);
+            container.appendChild(f);
+            fragments.push(f);
         }
 
-        // 入场动画
-        setTimeout(() => {
-            introMessage.style.opacity = '0';
-            setTimeout(() => {
-                introMessage.style.display = 'none';
-                terminal.style.display = 'flex';
-                // 开始数据流
-                setInterval(updateLogStream, 100);
-                // 开始能量显示
-                let energyInterval = setInterval(() => {
-                    let energy = (Math.random() * 10 + 5).toFixed(1); // 5.0 - 15.0 GigaHz
-                    energyDisplay.innerText = `${energy} GigaHz`;
-                }, 150);
+        function resetFragment(f) {
+            f.style.left = Math.random() * 100 + "%";
+            f.style.top = Math.random() * 100 + "%";
+            f.style.opacity = Math.random() * 0.2;
+            f.style.transform = `rotate(${Math.random() * 360}deg) scale(${Math.random() * 0.5 + 0.5})`;
+        }
 
-                // 最终结果生成
-                setTimeout(() => {
-                    clearInterval(energyInterval);
-                    energyDisplay.innerText = `[ PREDETERMINED. ]`; // 最终坍缩
-                    energyDisplay.style.color = '#ff003c';
-                    energyDisplay.style.textShadow = '0 0 20px rgba(255,0,60,0.8)';
-                    energyDisplay.style.animation = 'none'; // 停止脉冲
+        let timer;
+        let progress = 0;
 
-                    finalMessage.innerText = '[ 因果律最终判定 ]';
-                    dataDisplay.innerHTML = `
-                        <div style="margin-top:20px; color:#ff003c; font-size:16px;">[ 检测到核心指令冲突 ]</div>
-                        <div style="color:#00f2ff; font-size:14px; margin-top:10px;">POTENTIAL_WEALTH_NODES: 3</div>
-                        <div style="color:#00f2ff; font-size:14px;">ACTIVE_ENTANGLEMENTS: 2</div>
-                        <div style="color:#aaa; font-size:10px; margin-top:20px;">请联系命运协调员获取最高权限干预协议。</div>
-                    `;
-                    ctaButton.style.display = 'block'; // 显示按钮
-                }, 8000); // 8秒后出结果
-            }, 2000); // intro 淡出时间
-        }, 1000); // intro 延时显示
-        
-        ctaButton.onclick = () => {
-            alert("正在生成加密会话密钥...\n请将当前屏幕截图发送给命运协调员，以继续协议。");
+        const start = (e) => {
+            e.preventDefault();
+            core.classList.add('active');
+            // 碎片向中心汇聚
+            fragments.forEach(f => {
+                f.style.left = "50%";
+                f.style.top = "45%";
+                f.style.opacity = "0.8";
+                f.style.transform = "rotate(0deg) scale(0)";
+            });
+
+            timer = setInterval(() => {
+                progress += 1;
+                if (progress >= 100) {
+                    clearInterval(timer);
+                    verdict.style.display = 'flex';
+                }
+            }, 30);
         };
+
+        const stop = () => {
+            clearInterval(timer);
+            if (progress < 100) {
+                progress = 0;
+                core.classList.remove('active');
+                fragments.forEach(f => resetFragment(f));
+            }
+        };
+
+        core.addEventListener('touchstart', start);
+        core.addEventListener('touchend', stop);
+        core.addEventListener('mousedown', start);
+        core.addEventListener('mouseup', stop);
     </script>
 </body>
 </html>
