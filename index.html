@@ -3,139 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QUANTUM_SCANNER_V7</title>
+    <title>DESTINY_TERMINAL_V8</title>
     <style>
-        :root { --main-cyan: #00f2ff; --warn-red: #ff003c; }
+        :root { --glow: #00f2ff; --bg: #050505; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: #000; color: var(--main-cyan); font-family: 'Courier New', monospace; overflow: hidden; }
+        body { background: var(--bg); color: #fff; font-family: 'PingFang SC', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 背景：故障感网格 */
-        #bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,242,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,242,255,0.05) 1px, transparent 1px); background-size: 30px 30px; z-index: 1; }
-
-        #main-app { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px; }
-
-        /* 顶部：选择器 */
-        .selector-group { display: flex; justify-content: space-around; gap: 10px; }
-        .node-btn { border: 1px solid var(--main-cyan); padding: 8px 12px; font-size: 10px; opacity: 0.5; transition: 0.3s; }
-        .node-btn.active { opacity: 1; background: rgba(0,242,255,0.1); box-shadow: 0 0 15px var(--main-cyan); }
-
-        /* 中部：核心阵列 */
-        .core-display { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; }
-        #scanner-circle { width: 220px; height: 220px; border: 2px dashed var(--main-cyan); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.5s; animation: rotate 20s linear infinite; }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* 背景流光 */
+        #bg-effect { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%); z-index: 1; }
         
-        .fingerprint-icon { font-size: 40px; margin-bottom: 10px; animation: breathe 1.5s infinite; }
-        @keyframes breathe { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        /* 顶部状态：大而清晰 */
+        .top-bar { position: absolute; top: 40px; left: 25px; z-index: 10; border-left: 4px solid var(--glow); padding-left: 15px; }
+        .top-bar h1 { font-size: 28px; letter-spacing: 2px; font-weight: 900; }
+        .top-bar p { font-size: 12px; color: var(--glow); opacity: 0.7; margin-top: 5px; font-family: monospace; }
 
-        /* 底部：控制面板 */
-        .control-panel { background: rgba(0,0,0,0.8); border: 1px solid var(--main-cyan); padding: 20px; backdrop-filter: blur(10px); }
-        .loading-bar { height: 2px; width: 0%; background: var(--main-cyan); margin: 15px 0; transition: 0.1s; box-shadow: 0 0 10px var(--main-cyan); }
+        /* 中心传感器：视觉核心 */
+        .scanner-box { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); z-index: 5; text-align: center; }
+        #core-ring { 
+            width: 280px; height: 280px; border-radius: 50%; 
+            border: 2px solid rgba(0, 242, 255, 0.1);
+            display: flex; justify-content: center; align-items: center;
+            position: relative; transition: 0.3s;
+        }
+        .ring-inner { width: 80%; height: 80%; border: 1px dashed var(--glow); border-radius: 50%; animation: spin 10s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
-        /* 结果层 (初始隐藏) */
-        #result-layer { display: none; position: absolute; inset: 0; background: #000; z-index: 100; padding: 40px 20px; flex-direction: column; justify-content: center; }
-        .wealth-wave { height: 100px; border-bottom: 1px solid var(--main-cyan); position: relative; margin: 30px 0; overflow: hidden; }
-        .wave-line { position: absolute; width: 200%; height: 100%; background: repeating-linear-gradient(90deg, transparent, transparent 20px, var(--main-cyan) 21px); opacity: 0.2; animation: move 4s linear infinite; }
-        @keyframes move { from { left: -100%; } to { left: 0%; } }
+        #scan-hint { position: absolute; font-size: 18px; color: var(--glow); font-weight: bold; text-shadow: 0 0 10px var(--glow); }
 
-        #unlock-final { width: 100%; background: var(--main-cyan); color: #000; border: none; padding: 20px; font-weight: 900; font-size: 18px; margin-top: 30px; letter-spacing: 2px; }
+        /* 底部操作面板：大按钮、磨砂感 */
+        .bottom-ui { 
+            position: absolute; bottom: 30px; left: 20px; right: 20px; 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 30px; z-index: 20;
+        }
+        .status-tag { font-size: 12px; color: var(--glow); margin-bottom: 10px; display: block; }
+        .main-msg { font-size: 20px; font-weight: bold; line-height: 1.4; margin-bottom: 20px; }
+
+        /* 震撼的进度条 */
+        .progress-container { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+        #bar { width: 0%; height: 100%; background: var(--glow); box-shadow: 0 0 15px var(--glow); transition: 0.1s; }
+
+        /* 结果展示：全屏覆盖 */
+        #result-overlay { 
+            display: none; position: fixed; inset: 0; background: #000; z-index: 100; 
+            flex-direction: column; justify-content: center; align-items: center; padding: 40px;
+        }
+        .result-title { font-size: 40px; color: #FFD700; font-weight: 900; margin-bottom: 20px; text-align: center; }
+        .result-data { font-size: 16px; line-height: 1.8; color: #ccc; text-align: center; margin-bottom: 40px; }
+        
+        .big-btn { 
+            width: 100%; padding: 22px; background: linear-gradient(90deg, #00f2ff, #0072ff); 
+            border: none; border-radius: 16px; color: #fff; font-size: 20px; font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0, 242, 255, 0.3);
+        }
+
     </style>
 </head>
 <body>
-    <div id="bg-grid"></div>
+    <div id="bg-effect"></div>
 
-    <div id="main-app">
-        <div class="selector-group">
-            <div class="node-btn active" onclick="selectNode(this, 'WEALTH_PATH')">未来财富走向</div>
-            <div class="node-btn" onclick="selectNode(this, 'RELATION_SYNC')">宿命感情纠缠</div>
-            <div class="node-btn" onclick="selectNode(this, 'CORE_DESIRE')">底层欲望提取</div>
-        </div>
+    <div class="top-bar">
+        <h1>因果观测站</h1>
+        <p>CAUSALITY_MONITOR_SESS: 8829</p>
+    </div>
 
-        <div class="core-display">
-            <div id="scanner-circle">
-                <div class="fingerprint-icon">(( ◈ ))</div>
-                <div style="font-size: 10px; letter-spacing: 2px;">长按同步生物能</div>
-            </div>
-        </div>
-
-        <div class="control-panel">
-            <div id="status-line" style="font-size: 12px;">SYSTEM: STANDBY [AWAITING_INPUT]</div>
-            <div class="loading-bar" id="progress"></div>
-            <div style="display: flex; justify-content: space-between; font-size: 9px; opacity: 0.5;">
-                <span>FREQ: 432HZ</span>
-                <span id="sync-val">SYNC: 0.00%</span>
-            </div>
+    <div class="scanner-box">
+        <div id="core-ring">
+            <div class="ring-inner"></div>
+            <div id="scan-hint">长按对齐指纹</div>
         </div>
     </div>
 
-    <div id="result-layer">
-        <div style="font-size: 14px; border-left: 3px solid var(--main-cyan); padding-left: 10px;">因果律解析成功</div>
-        <h2 id="res-title" style="margin-top: 20px; font-size: 28px;">财富波峰节点已锁定</h2>
-        <div class="wealth-wave">
-            <div class="wave-line"></div>
-            <div style="position:absolute; top: 10px; left: 20%; color: var(--warn-red); font-size: 10px;">[ !!! 强力偏移点 ]</div>
+    <div class="bottom-ui">
+        <span class="status-tag">● 正在监听财富纠缠频率</span>
+        <div class="main-msg" id="msg">请将指纹放置在中心感应区，我们将提取你未来12个月的财富波动...</div>
+        <div class="progress-container">
+            <div id="bar"></div>
         </div>
-        <p id="res-desc" style="font-size: 14px; line-height: 1.8; opacity: 0.8;">检测到 2026 年 Q2 季度存在异常资产波动。该波动受当前量子纠缠影响，可能引发连锁财务反应。建议查阅深度干预报告。</p>
-        <button id="unlock-final">点击解锁 2026 全年因果报告</button>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; opacity: 0.5;">
+            <span>SYNCING...</span>
+            <span id="percent">0%</span>
+        </div>
+    </div>
+
+    <div id="result-overlay">
+        <div class="result-title">发现财富奇点</div>
+        <div class="result-data">
+            经量子演算，你在 <span style="color:#FFD700; font-size:24px;">2026年5月</span> 存在一次剧烈的资产纠缠爆发。受当前因果律影响，该节点命中率达 <span style="color:#FFD700;">94.8%</span>。
+        </div>
+        <button class="big-btn" onclick="location.reload()">解锁完整年度分析</button>
     </div>
 
     <script>
-        let isSyncing = false;
         let progress = 0;
         let timer;
-
-        function selectNode(el, type) {
-            document.querySelectorAll('.node-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('status-line').innerText = `NODE: ${type} [SELECTED]`;
-        }
+        const ring = document.getElementById('core-ring');
+        const bar = document.getElementById('bar');
+        const percent = document.getElementById('percent');
+        const msg = document.getElementById('msg');
+        const overlay = document.getElementById('result-overlay');
 
         const start = (e) => {
             e.preventDefault();
-            isSyncing = true;
-            document.getElementById('scanner-circle').style.animation = "rotate 2s linear infinite";
-            document.getElementById('scanner-circle').style.boxShadow = "0 0 50px #00f2ff";
+            ring.style.transform = "translate(-50%, -50%) scale(0.9)";
+            ring.style.borderColor = "#00f2ff";
+            ring.style.boxShadow = "0 0 60px rgba(0, 242, 255, 0.4)";
             
             timer = setInterval(() => {
                 if(progress < 100) {
-                    progress += 0.5;
-                    updateUI();
+                    progress += 1.5;
+                    bar.style.width = progress + "%";
+                    percent.innerText = Math.floor(progress) + "%";
+                    msg.innerText = "正在向高维节点发送请求，请勿松开手指...";
                 } else {
                     clearInterval(timer);
-                    showFinalResult();
+                    overlay.style.display = 'flex';
                 }
-            }, 20);
+            }, 30);
         };
 
         const stop = () => {
-            isSyncing = false;
             clearInterval(timer);
             if(progress < 100) {
                 progress = 0;
-                updateUI();
-                document.getElementById('scanner-circle').style.animation = "rotate 20s linear infinite";
-                document.getElementById('scanner-circle').style.boxShadow = "none";
+                bar.style.width = "0%";
+                percent.innerText = "0%";
+                ring.style.transform = "translate(-50%, -50%) scale(1)";
+                ring.style.boxShadow = "none";
+                msg.innerText = "同步中断。请重新长按中心感应区以确认识别。";
             }
         };
 
-        function updateUI() {
-            document.getElementById('progress').style.width = progress + "%";
-            document.getElementById('sync-val').innerText = `SYNC: ${progress.toFixed(2)}%`;
-            document.getElementById('status-line').innerText = progress > 0 ? "ANALYZING BIOMETRIC DATA..." : "SYSTEM: STANDBY [AWAITING_INPUT]";
-        }
-
-        function showFinalResult() {
-            document.getElementById('result-layer').style.display = 'flex';
-        }
-
-        const core = document.getElementById('scanner-circle');
-        core.addEventListener('touchstart', start);
-        core.addEventListener('touchend', stop);
-        core.addEventListener('mousedown', start);
-        core.addEventListener('mouseup', stop);
-
-        document.getElementById('unlock-final').onclick = () => {
-            alert("正在生成加密PDF报告...\n请联系命运分析师完成身份验证。");
-        };
+        ring.addEventListener('touchstart', start);
+        ring.addEventListener('touchend', stop);
+        ring.addEventListener('mousedown', start);
+        ring.addEventListener('mouseup', stop);
     </script>
 </body>
 </html>
