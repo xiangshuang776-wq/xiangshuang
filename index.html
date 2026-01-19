@@ -3,159 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DESTINY_DRIVE_V10</title>
+    <title>UNAUTHORIZED_ACCESS</title>
     <style>
-        :root { --neon: #00ff41; --danger: #ff0055; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Orbitron', sans-serif; }
-        body { background: #000; color: var(--neon); overflow: hidden; height: 100vh; }
-
-        /* 扫描线效果 */
-        #scanner { position: fixed; top: 0; width: 100%; height: 5px; background: rgba(0,255,65,0.2); z-index: 100; animation: scan 3s linear infinite; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-
-        /* 动态仪表 */
-        .dashboard { position: absolute; top: 40px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; z-index: 10; }
-        .stat-box { border: 1px solid var(--neon); padding: 10px; min-width: 100px; text-align: center; background: rgba(0,255,65,0.05); }
-        .stat-label { font-size: 8px; opacity: 0.6; }
-        .stat-val { font-size: 16px; font-weight: bold; }
-
-        /* 核心感应区：交互战场 */
-        #game-zone { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; }
-        #core-sensor { 
-            width: 200px; height: 200px; border-radius: 50%; border: 4px solid var(--neon);
-            display: flex; justify-content: center; align-items: center; transition: 0.2s;
-            background: radial-gradient(circle, rgba(0,255,65,0.1) 0%, transparent 70%);
-            z-index: 50;
-        }
+        body, html { margin: 0; padding: 0; background: #050505; color: #fff; font-family: monospace; overflow: hidden; height: 100vh; }
         
-        /* 干扰粒子 */
-        .glitch-particle { 
-            position: absolute; width: 40px; height: 40px; background: var(--danger); 
-            border-radius: 50%; filter: blur(10px); z-index: 60; cursor: pointer;
-        }
+        /* 模拟屏幕噪点 */
+        #noise-layer { position: fixed; inset: 0; background: url('https://media.giphy.com/media/oEI9uWU9H0B7q/giphy.gif'); opacity: 0.03; z-index: 100; pointer-events: none; }
 
-        /* 底部引导 */
-        .footer { position: absolute; bottom: 50px; width: 100%; text-align: center; z-index: 10; padding: 0 40px; }
-        .hint { font-size: 12px; margin-bottom: 15px; text-shadow: 0 0 5px var(--neon); }
-        #main-btn { 
-            width: 100%; height: 60px; background: var(--neon); color: #000; 
-            border: none; font-weight: 900; letter-spacing: 5px; cursor: pointer;
-        }
+        /* 顶部黑客指令流 */
+        #log-stream { position: absolute; top: 10px; left: 10px; font-size: 10px; color: #333; height: 100px; overflow: hidden; z-index: 5; }
 
-        /* 结算弹窗：极简、有力 */
-        #overlay { 
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
-            z-index: 200; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
-        }
-        .result-rank { font-size: 80px; font-weight: 900; color: #fff; margin-bottom: 20px; }
+        /* 核心感应器：极简、冷峻 */
+        .main-scanner { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+        #core-target { width: 120px; height: 120px; border: 1px solid #fff; position: relative; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        #core-target::before { content: ''; position: absolute; width: 200%; height: 1px; background: rgba(255,255,255,0.2); }
+        #core-target::after { content: ''; position: absolute; height: 200%; width: 1px; background: rgba(255,255,255,0.2); }
+        
+        /* 交互反馈文字 */
+        .hint-text { margin-top: 40px; font-size: 12px; letter-spacing: 4px; text-align: center; color: #666; }
+
+        /* 结果弹窗：档案感 */
+        #result-screen { display: none; position: fixed; inset: 0; background: #f0f0f0; color: #000; z-index: 1000; padding: 40px; flex-direction: column; }
+        .file-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
+        .file-title { font-size: 24px; font-weight: 900; }
+        .data-row { margin: 15px 0; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .data-label { font-size: 10px; color: #888; text-transform: uppercase; }
+        .data-val { font-size: 20px; font-weight: bold; }
+        
+        #cta-btn { margin-top: auto; width: 100%; padding: 20px; background: #000; color: #fff; border: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="scanner"></div>
+    <div id="noise-layer"></div>
+    <div id="log-stream"></div>
 
-    <div class="dashboard">
-        <div class="stat-box">
-            <div class="stat-label">稳定度 (STB)</div>
-            <div class="stat-val" id="stb-val">99%</div>
+    <div class="main-scanner">
+        <div id="core-target">
+            <div style="width: 10px; height: 10px; background: #fff;"></div>
         </div>
-        <div class="stat-box">
-            <div class="stat-label">算力 (CALC)</div>
-            <div class="stat-val" id="calc-val">0</div>
-        </div>
+        <div class="hint-text" id="status">INIT_CAUSALITY_LINK...<br>等待指纹同步</div>
     </div>
 
-    <div id="game-zone">
-        <div id="core-sensor">HOLD</div>
-    </div>
-
-    <div class="footer">
-        <p class="hint">按住中心点并点击清除红色[因果干扰]以提高预测精度</p>
-        <button id="main-btn">初始化链接</button>
-    </div>
-
-    <div id="overlay">
-        <div class="stat-label">预测结果生成</div>
-        <div class="result-rank" id="rank-tag">S+</div>
-        <div style="font-size: 18px; text-align: center; color: #fff; line-height: 1.6;">
-            你的财富纠缠已突破阈值。<br>
-            <span id="final-date" style="background: var(--neon); color: #000; padding: 0 10px;">2026.06.18</span><br>
-            因果扭转成功，该节点溢出率达 420%。
+    <div id="result-screen">
+        <div class="file-header">
+            <div style="font-size: 10px;">CONFIDENTIAL DOCUMENT // CAUSALITY NO. 776</div>
+            <div class="file-title">命数映射档案</div>
         </div>
-        <button onclick="location.reload()" style="margin-top:40px; background:none; border: 1px solid #fff; color:#fff; padding: 15px 40px;">再次提升稳定性</button>
+
+        <div class="data-row">
+            <div class="data-label">财富波峰预测</div>
+            <div class="data-val">2026.05.14 - 2026.06.22</div>
+        </div>
+        <div class="data-row">
+            <div class="data-label">资产增量级别</div>
+            <div class="data-val">等级：Ω (OMEGA)</div>
+        </div>
+        <div class="data-row">
+            <div class="data-label">地理关联性</div>
+            <div class="data-val">东南 14.2KM</div>
+        </div>
+
+        <div style="margin-top: 20px; font-size: 12px; color: #ff003c; font-weight: bold; border: 1px solid #ff003c; padding: 10px;">
+            ⚠️ 警告：该节点处于坍塌边缘，剩余有效时间 23:58:12
+        </div>
+
+        <button id="cta-btn">申请深度干预协议</button>
     </div>
 
     <script>
-        let isHolding = false;
-        let stability = 99;
-        let score = 0;
-        let gameTimer;
+        const target = document.getElementById('core-target');
+        const status = document.getElementById('status');
+        const logs = document.getElementById('log-stream');
+        const screen = document.getElementById('result-screen');
+        
+        // 伪造黑客日志
+        setInterval(() => {
+            const hex = Math.random().toString(16).substr(2, 8);
+            logs.innerHTML = `> ACCESSING_NODE_${hex}... OK<br>` + logs.innerHTML.slice(0, 300);
+        }, 200);
 
-        const sensor = document.getElementById('core-sensor');
-        const stbText = document.getElementById('stb-val');
-        const calcText = document.getElementById('calc-val');
-        const overlay = document.getElementById('overlay');
-
-        function createGlitch() {
-            if(!isHolding) return;
-            const glitch = document.createElement('div');
-            glitch.className = 'glitch-particle';
-            glitch.style.left = Math.random() * 80 + 10 + "%";
-            glitch.style.top = Math.random() * 80 + 10 + "%";
-            document.body.appendChild(glitch);
-
-            glitch.onclick = () => {
-                score += 150;
-                stability = Math.min(stability + 5, 100);
-                glitch.remove();
-            };
-
-            setTimeout(() => {
-                if(glitch.parentNode) {
-                    glitch.remove();
-                    stability -= 10;
-                }
-            }, 1000);
-        }
+        let progress = 0;
+        let timer;
 
         const start = (e) => {
             e.preventDefault();
-            isHolding = true;
-            sensor.style.transform = "scale(1.2)";
-            sensor.innerText = "SYNCING";
-            gameTimer = setInterval(() => {
-                score += 10;
-                updateUI();
-                if(Math.random() > 0.7) createGlitch();
-                if(score > 5000) endGame();
-            }, 100);
+            target.style.transform = "scale(0.8) rotate(45deg)";
+            target.style.background = "rgba(255,255,255,0.1)";
+            status.innerText = "数据抓取中...\n量子链路已建立";
+            status.style.color = "#fff";
+
+            timer = setInterval(() => {
+                progress += 2;
+                if(progress >= 100) {
+                    clearInterval(timer);
+                    screen.style.display = "flex";
+                }
+            }, 50);
         };
 
         const stop = () => {
-            isHolding = false;
-            clearInterval(gameTimer);
-            score = 0;
-            stability = 99;
-            sensor.style.transform = "scale(1)";
-            sensor.innerText = "HOLD";
-            updateUI();
+            clearInterval(timer);
+            if(progress < 100) {
+                progress = 0;
+                target.style.transform = "none";
+                target.style.background = "none";
+                status.innerText = "同步失败\n链接已重置";
+                status.style.color = "#666";
+            }
         };
 
-        function updateUI() {
-            stbText.innerText = stability + "%";
-            calcText.innerText = score;
-            if(stability <= 0) endGame();
-        }
-
-        function endGame() {
-            overlay.style.display = 'flex';
-            const rank = stability > 80 ? "SSS" : stability > 50 ? "A" : "D";
-            document.getElementById('rank-tag').innerText = rank;
-        }
-
-        sensor.addEventListener('touchstart', start);
-        sensor.addEventListener('touchend', stop);
-        sensor.addEventListener('mousedown', start);
-        sensor.addEventListener('mouseup', stop);
+        target.addEventListener('touchstart', start);
+        target.addEventListener('touchend', stop);
+        target.addEventListener('mousedown', start);
+        target.addEventListener('mouseup', stop);
+        
+        document.getElementById('cta-btn').onclick = () => {
+            alert("正在生成物理密钥...\n请将此档案截图发送给命运管理员。");
+        };
     </script>
 </body>
 </html>
