@@ -1,118 +1,187 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE ANCHOR</title>
+    <title>THE_ORIGIN_ULTIMATE</title>
     <style>
-        :root { --gold: #E5C76B; --bg: #000; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--gold); font-family: 'Helvetica Neue', sans-serif; height: 100vh; overflow: hidden; }
+        :root { --gold: #D4AF37; --white: #FFFFFF; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; background: #000; overflow: hidden; font-family: "Optima", "PingFang SC", serif; }
+
+        /* 全局画布：流体背景 */
+        #canvas { position: fixed; inset: 0; z-index: 1; }
+
+        /* UI层：交互包装 */
+        #ui-layer { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
         
-        /* 涟漪画布 */
-        canvas { position: fixed; inset: 0; cursor: crosshair; }
+        .hint { color: var(--gold); font-size: 10px; letter-spacing: 12px; opacity: 0; transition: 2s; text-align: center; }
+        .active-hint { opacity: 0.5; animation: blink 3s infinite; }
+        @keyframes blink { 50% { opacity: 0.1; } }
 
-        /* 极简界面 */
-        #ui-layer { 
-            position: relative; z-index: 10; height: 100%; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            pointer-events: none; transition: 1s ease;
-        }
-        
-        .prompt { font-size: 10px; letter-spacing: 8px; opacity: 0.5; animation: breathe 3s infinite; }
-        @keyframes breathe { 50% { opacity: 0.1; letter-spacing: 12px; } }
+        /* 录入层 */
+        #input-panel { pointer-events: all; display: none; flex-direction: column; align-items: center; opacity: 0; transition: 1s; }
+        input { background: none; border: none; border-bottom: 1px solid var(--gold); color: #fff; font-size: 28px; text-align: center; outline: none; padding: 10px; width: 250px; font-weight: 200; }
+        .next-btn { margin-top: 40px; color: var(--gold); font-size: 12px; letter-spacing: 5px; cursor: pointer; border: 1px solid var(--gold); padding: 10px 30px; }
 
-        /* 输入状态 */
-        #input-box { 
-            pointer-events: all; border: none; background: none; color: #fff;
-            font-size: 32px; text-align: center; border-bottom: 1px solid var(--gold);
-            outline: none; margin-top: 30px; width: 80%; display: none;
-        }
+        /* 对焦圆环 */
+        #tuner-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .tuner-circle { width: 300px; height: 300px; border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 50%; position: relative; }
+        #pointer { position: absolute; top: 50%; left: 50%; width: 1px; height: 140px; background: var(--gold); transform-origin: bottom center; transform: translateX(-50%) rotate(0deg); box-shadow: 0 0 15px var(--gold); }
+        .sync-text { font-size: 48px; color: var(--gold); font-weight: 100; margin-top: 50px; }
 
-        /* 结果显示 */
-        #manifesto {
-            position: fixed; inset: 0; background: #fff; color: #000;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100; text-align: center;
-        }
-        .date-huge { font-size: 80px; font-weight: 900; letter-spacing: -4px; }
+        /* 结果层：神启 */
+        #result-layer { position: fixed; inset: 0; z-index: 100; background: var(--white); color: #000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; animation: flash 0.8s ease-out; }
+        @keyframes flash { from { opacity: 0; background: #fff; } to { opacity: 1; } }
+        .card { text-align: center; border: 1px solid #eee; padding: 50px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.05); }
+        .date { font-size: 72px; font-weight: 900; letter-spacing: -4px; margin: 20px 0; border-bottom: 6px solid #000; }
     </style>
 </head>
 <body>
-    <canvas id="liquidCanvas"></canvas>
+
+    <canvas id="canvas"></canvas>
 
     <div id="ui-layer">
-        <div class="prompt" id="main-hint">TOUCH THE VOID</div>
-        <input type="text" id="input-box" placeholder="YOUR NAME">
+        <div id="start-hint" class="hint active-hint">TOUCH THE VOID<br><br>触 碰 虚 空</div>
+        
+        <div id="input-panel">
+            <input type="text" id="username" placeholder="NAME" spellcheck="false" autocomplete="off">
+            <div class="next-btn" onclick="startTuner()">同步意识频率</div>
+        </div>
+
+        <div id="tuner-panel">
+            <div class="tuner-circle"><div id="pointer"></div></div>
+            <div class="sync-text" id="sync-val">00%</div>
+            <div class="hint active-hint" style="margin-top: 20px;">翻 转 手 机 · 寻 找 命 定 偏 角</div>
+        </div>
     </div>
 
-    <div id="manifesto">
-        <div style="font-size:12px; letter-spacing:10px; margin-bottom:20px;">ANCHOR LOCKED</div>
-        <div class="date-huge" id="res-date">09.14</div>
-        <div style="margin-top:40px; font-size:14px; line-height:2;">
-            <b>因果锚点已扎根</b><br>
-            2026年 概率溢出点锁定。
-        </div>
-        <div id="progress-bar" style="width:200px; height:2px; background:#eee; margin-top:40px; position:relative; overflow:hidden;">
-            <div id="fill" style="position:absolute; left:0; top:0; height:100%; width:0%; background:#000; transition: 0.1s;"></div>
+    <div id="result-layer">
+        <div class="card">
+            <div style="font-size: 10px; letter-spacing: 8px; color: #888;">COSMIC ANCHOR</div>
+            <div id="res-name" style="margin-top: 20px; font-weight: bold; font-size: 18px;">---</div>
+            <div class="date" id="res-date">08.24</div>
+            <p style="font-size: 14px; line-height: 2; margin-top: 30px;">
+                <b>因果节点已对焦成功</b><br>
+                此瞬间为资产跃迁之始，请保持意识开放。
+            </p>
+            <button onclick="location.reload()" style="margin-top: 40px; background: #000; color: #fff; border: none; padding: 15px 40px; font-size: 12px; letter-spacing: 4px;">锁定并保存</button>
         </div>
     </div>
 
     <script>
-        // 这是一个基础交互逻辑：通过触摸改变环境
-        const canvas = document.getElementById('liquidCanvas');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        let width, height;
+        let width, height, particles = [];
 
-        function resize() {
+        // 1. 物理流体引擎 (超人类视觉基础)
+        function init() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
         }
-        window.addEventListener('resize', resize);
-        resize();
+        window.addEventListener('resize', init);
+        init();
 
-        // 简单的涟漪动画模拟 (超人类版本会使用WebGL)
-        let points = [];
-        canvas.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            points.push({ x: touch.clientX, y: touch.clientY, r: 0, opacity: 1 });
-            if(points.length > 20) {
-                document.getElementById('main-hint').innerText = "OBSERVING REALITY...";
-                setTimeout(() => {
-                    document.getElementById('input-box').style.display = 'block';
-                }, 1000);
+        class Particle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.r = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.life = 1;
             }
-        });
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.life -= 0.005;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(212, 175, 55, ${this.life})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
 
         function animate() {
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, width, height);
-            
-            points.forEach((p, i) => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(229, 199, 107, ${p.opacity})`;
-                ctx.stroke();
-                p.r += 2;
-                p.opacity -= 0.02;
-                if(p.opacity <= 0) points.splice(i, 1);
+            particles.forEach((p, i) => {
+                p.update(); p.draw();
+                if(p.life <= 0) particles.splice(i, 1);
             });
             requestAnimationFrame(animate);
         }
         animate();
 
-        // 模拟结果触发
-        document.getElementById('input-box').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') {
-                document.getElementById('manifesto').style.display = 'flex';
-                let p = 0;
-                const fill = document.getElementById('fill');
-                const itv = setInterval(() => {
-                    p += 0.5;
-                    fill.style.width = p + '%';
-                    if(p >= 100) clearInterval(itv);
-                }, 50);
+        // 2. 交互流程控制
+        let phase = 0;
+        window.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            for(let i=0; i<5; i++) particles.push(new Particle(touch.clientX, touch.clientY));
+            
+            if(phase === 0) {
+                document.getElementById('start-hint').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('start-hint').style.display = 'none';
+                    document.getElementById('input-panel').style.display = 'flex';
+                    setTimeout(() => document.getElementById('input-panel').style.opacity = '1', 100);
+                }, 1000);
+                phase = 1;
             }
         });
+
+        function startTuner() {
+            if(!document.getElementById('username').value) return;
+            document.getElementById('input-panel').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('input-panel').style.display = 'none';
+                document.getElementById('tuner-panel').style.display = 'flex';
+                requestPermissions();
+            }, 1000);
+        }
+
+        // 3. 核心：重力感应对焦逻辑 (自检：角度计算精准)
+        let syncProgress = 0;
+        const pointer = document.getElementById('pointer');
+        const syncVal = document.getElementById('sync-val');
+
+        function requestPermissions() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(state => {
+                    if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation);
+                });
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
+        }
+
+        function handleOrientation(e) {
+            const beta = e.beta; // 手机前后倾斜角度
+            pointer.style.transform = `translateX(-50%) rotate(${beta * 3}deg)`;
+            
+            // 设定对焦点为：手机水平抬起 45 度左右
+            if (Math.abs(beta - 45) < 8) {
+                syncProgress += 0.6;
+                syncVal.style.color = "#fff";
+                syncVal.style.textShadow = "0 0 20px var(--gold)";
+            } else {
+                syncProgress = Math.max(0, syncProgress - 0.2);
+                syncVal.style.color = "var(--gold)";
+                syncVal.style.textShadow = "none";
+            }
+            
+            syncVal.innerText = Math.min(Math.floor(syncProgress), 100).toString().padStart(2, '0') + "%";
+            if(syncProgress >= 100) triggerResult();
+        }
+
+        function triggerResult() {
+            window.removeEventListener('deviceorientation', handleOrientation);
+            document.getElementById('res-name').innerText = document.getElementById('username').value.toUpperCase();
+            // 随机生成一个未来感日期
+            const dates = ["05.19", "06.22", "08.15", "11.03", "12.12"];
+            document.getElementById('res-date').innerText = dates[Math.floor(Math.random()*dates.length)];
+            document.getElementById('result-layer').style.display = 'flex';
+        }
     </script>
 </body>
 </html>
