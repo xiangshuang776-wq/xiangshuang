@@ -3,188 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DESTINY_AXIS_V15</title>
+    <title>THE_DIVINE_RADAR</title>
     <style>
-        :root { --gold: #c5a059; --bg: #050505; --line: rgba(197, 160, 89, 0.2); }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font-family: "PingFang SC", "Noto Serif SC", serif; overflow: hidden; }
-
-        /* 首页：录入界面 */
-        #home-page { 
-            position: fixed; inset: 0; z-index: 100; padding: 60px 40px;
-            background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 100%);
-            display: flex; flex-direction: column; transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
-        }
-        .header h1 { font-size: 36px; font-weight: 200; letter-spacing: 12px; color: var(--gold); text-align: center; margin-bottom: 60px; }
+        :root { --gold: #d4af37; --bg: #030303; --radar: rgba(212, 175, 55, 0.1); }
+        body { background: var(--bg); color: #fff; font-family: "Source Han Serif SC", serif; overflow: hidden; margin: 0; }
         
-        .input-item { margin-bottom: 40px; }
-        .input-item label { display: block; font-size: 10px; color: var(--gold); letter-spacing: 3px; margin-bottom: 12px; opacity: 0.6; }
-        .input-item input { 
-            width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--line);
-            padding: 10px 0; color: #fff; font-size: 20px; outline: none; transition: 0.3s;
-        }
-        .input-item input:focus { border-bottom: 1px solid var(--gold); }
+        /* 首页：雷达感官 */
+        #home { position: fixed; inset: 0; z-index: 100; background: #000; padding: 40px; display: flex; flex-direction: column; }
+        .radar-line { position: absolute; top: 50%; left: 50%; width: 200%; height: 200%; background: conic-gradient(from 0deg, var(--radar), transparent); transform: translate(-50%, -50%); animation: scan 4s linear infinite; pointer-events: none; }
+        @keyframes scan { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
 
-        .selector { display: flex; justify-content: space-between; margin-top: 10px; }
-        .sel-opt { 
-            flex: 1; text-align: center; padding: 15px 0; border: 1px solid var(--line); 
-            font-size: 12px; color: #666; transition: 0.3s; margin: 0 5px; cursor: pointer;
-        }
-        .sel-opt.active { border-color: var(--gold); color: var(--gold); background: rgba(197, 160, 89, 0.05); }
+        .tag-alert { font-size: 10px; color: #ff3b30; border: 1px solid #ff3b30; padding: 2px 6px; align-self: flex-start; margin-bottom: 20px; animation: flash 1s infinite; }
+        @keyframes flash { 50% { opacity: 0.3; } }
 
-        .submit-btn { 
-            margin-top: auto; width: 100%; padding: 22px; background: var(--gold); 
-            color: #000; border: none; font-weight: 900; letter-spacing: 6px; font-size: 16px;
-        }
-
-        /* 调频页：星象核心 */
-        #tuner-page { 
-            position: fixed; inset: 0; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 50; visibility: hidden;
-        }
-        .dial-wrap { position: relative; width: 340px; height: 340px; display: flex; justify-content: center; align-items: center; }
+        h2 { font-size: 28px; font-weight: 200; letter-spacing: 5px; margin-bottom: 40px; line-height: 1.5; }
         
-        /* 梵文符文圈 */
-        .symbol-ring { 
-            position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--line);
-            display: flex; justify-content: center; align-items: center;
-        }
-        .symbol { 
-            position: absolute; font-size: 16px; color: var(--gold); opacity: 0.2; 
-            font-family: serif; width: 20px; text-align: center; transition: 0.3s;
-        }
+        .input-box { border-bottom: 0.5px solid rgba(255,255,255,0.2); margin-bottom: 30px; padding: 10px 0; }
+        input { background: none; border: none; color: #fff; font-size: 18px; width: 100%; outline: none; }
+        
+        .btn-main { margin-top: auto; background: var(--gold); color: #000; padding: 20px; border: none; font-weight: bold; letter-spacing: 5px; font-size: 16px; box-shadow: 0 0 30px rgba(212,175,55,0.3); }
 
-        /* 指针：精准固定圆心 */
-        #pointer-axis { 
-            position: relative; width: 4px; height: 4px; background: var(--gold); border-radius: 50%;
-            z-index: 20; box-shadow: 0 0 10px var(--gold);
-        }
-        #pointer-needle { 
-            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 1px; height: 140px; background: linear-gradient(to top, var(--gold), transparent);
-            transform-origin: bottom center; transition: transform 0.1s ease-out;
-        }
-
-        .status-msg { margin-top: 60px; font-size: 12px; letter-spacing: 4px; color: #444; text-align: center; }
-        #sync-per { font-size: 10px; color: var(--gold); margin-top: 10px; opacity: 0; }
+        /* 对焦页 */
+        #tuner { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 50; }
+        .dial-system { position: relative; width: 300px; height: 300px; }
+        .ring { position: absolute; border-radius: 50%; border: 1px solid var(--radar); }
+        .ring-1 { inset: 0; }
+        .ring-2 { inset: 30px; border-style: dashed; }
+        #needle { position: absolute; top: 50%; left: 50%; width: 2px; height: 130px; background: var(--gold); transform-origin: top center; transform: translateX(-50%) rotate(0deg); }
 
         /* 结果页 */
-        #result-page { 
-            position: fixed; inset: 0; z-index: 200; background: #fff; color: #000;
-            display: none; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
-        }
-        .res-name { font-size: 18px; letter-spacing: 4px; margin-bottom: 10px; }
-        .res-date { font-size: 56px; font-weight: 900; letter-spacing: -2px; border-bottom: 4px solid #000; padding-bottom: 5px; }
+        #result { position: fixed; inset: 0; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; z-index: 200; }
+        .stamp { width: 80px; height: 80px; border: 3px solid #ff3b30; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ff3b30; font-weight: 900; transform: rotate(-15deg); margin-top: 30px; font-size: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="home-page">
-        <div class="header"><h1>命数之枢</h1></div>
-        <div class="input-item">
-            <label>受测者姓名</label>
-            <input type="text" id="uname" placeholder="NAME" spellcheck="false">
-        </div>
-        <div class="input-item">
-            <label>生辰节点</label>
-            <input type="date" id="ubirth">
-        </div>
-        <div class="input-item">
-            <label>观测维度</label>
-            <div class="selector">
-                <div class="sel-opt active" onclick="setOpt(this)">财富</div>
-                <div class="sel-opt" onclick="setOpt(this)">缘分</div>
-                <div class="sel-opt" onclick="setOpt(this)">健康</div>
-            </div>
-        </div>
-        <button class="submit-btn" onclick="startScan()">开启频率捕获</button>
+    <div id="home">
+        <div class="radar-line"></div>
+        <div class="tag-alert">ALERT: 发现异常引力场</div>
+        <h2>因果波动检测中...<br><span style="font-size: 14px; opacity: 0.5;">检测到附近存在未解锁的财富节点</span></h2>
+        
+        <div class="input-box"><input type="text" id="name" placeholder="输入姓名以建立链接" spellcheck="false"></div>
+        <div class="input-box"><input type="date" id="date"></div>
+        
+        <button class="btn-main" onclick="goTuner()">定位我的因果位面</button>
     </div>
 
-    <div id="tuner-page">
-        <div class="dial-wrap">
-            <div class="symbol-ring" id="ring"></div>
-            <div id="pointer-axis">
-                <div id="pointer-needle"></div>
-            </div>
+    <div id="tuner">
+        <div class="dial-system">
+            <div class="ring ring-1"></div>
+            <div class="ring ring-2"></div>
+            <div id="needle"></div>
         </div>
-        <div class="status-msg" id="hint">左右滑动屏幕以对齐宿命符文</div>
-        <div id="sync-per">SYNC: 0%</div>
+        <p style="margin-top: 50px; color: var(--gold); letter-spacing: 5px; font-size: 12px;">滑动屏幕 · 对焦捕获窗口</p>
+        <div id="lock-status" style="margin-top: 20px; font-size: 10px; opacity: 0.5;">LOCKING: 0%</div>
     </div>
 
-    <div id="result-page">
-        <div class="res-name" id="res-user">---</div>
-        <div style="font-size: 10px; color: #888; margin-bottom: 40px;">2026年 极值点锁定</div>
-        <div class="res-date" id="res-val">05.18</div>
-        <p style="margin-top: 50px; text-align: center; font-size: 14px; line-height: 2;">
-            因果频率已完全同步。<br><b>[ 该节点不可撤销 ]</b>
-        </p>
-        <button onclick="location.reload()" style="margin-top: 60px; background: #000; color: #fff; border: none; padding: 18px 40px; font-weight: bold; letter-spacing: 2px;">保存档案</button>
+    <div id="result">
+        <div style="font-size: 12px; letter-spacing: 5px; margin-bottom: 10px;">TOP SECRET</div>
+        <div id="res-name" style="font-size: 24px; font-weight: bold;">---</div>
+        <div style="font-size: 14px; margin: 20px 0;">命定财富爆发窗口</div>
+        <div id="res-date" style="font-size: 48px; font-weight: 900; border-bottom: 5px solid #000;">2026.05.22</div>
+        <div class="stamp">已锁定</div>
+        <p style="margin-top: 40px; text-align: center; font-size: 12px; color: #666; line-height: 1.8;">注：由于因果纠缠具有时效性，<br>请在 24 小时内完成干预，否则窗口将关闭。</p>
+        <button onclick="location.reload()" style="margin-top: 40px; background: #000; color: #fff; border: none; padding: 15px 40px;">获取干预方案</button>
     </div>
 
     <script>
-        // 初始化符文圈
-        const ring = document.getElementById('ring');
-        const symbols = "ॐ卍☯☾☉☿♀♂♃♄♅♆♇♈♉♊♋♌♍♎♏♐♑♒♓";
-        for(let i=0; i<24; i++) {
-            const s = document.createElement('div');
-            s.className = 'symbol';
-            s.innerText = symbols[i % symbols.length];
-            const angle = (i * 15) * Math.PI / 180;
-            const x = Math.cos(angle) * 150;
-            const y = Math.sin(angle) * 150;
-            s.style.transform = `translate(${x}px, ${y}px)`;
-            ring.appendChild(s);
+        function goTuner() {
+            if(!document.getElementById('name').value) return;
+            document.getElementById('home').style.display = 'none';
+            document.getElementById('tuner').style.display = 'flex';
         }
 
-        function setOpt(el) {
-            document.querySelectorAll('.sel-opt').forEach(o => o.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function startScan() {
-            if(!document.getElementById('uname').value) return alert("请录入姓名");
-            document.getElementById('home-page').style.transform = "translateY(-100%)";
-            document.getElementById('tuner-page').style.visibility = "visible";
-        }
-
-        let currentRot = 0;
-        let lastX = 0;
-        let sync = 0;
-        const needle = document.getElementById('pointer-needle');
-        const syncLabel = document.getElementById('sync-per');
-        const hint = document.getElementById('hint');
+        let rot = 0, lastX = 0, progress = 0;
+        const needle = document.getElementById('needle');
+        const lockStatus = document.getElementById('lock-status');
 
         window.addEventListener('touchstart', e => lastX = e.touches[0].clientX);
         window.addEventListener('touchmove', e => {
-            const delta = e.touches[0].clientX - lastX;
-            currentRot += delta * 0.5;
-            needle.style.transform = `translateX(-50%) rotate(${currentRot}deg)`;
+            let delta = e.touches[0].clientX - lastX;
+            rot += delta * 0.5;
+            needle.style.transform = `translateX(-50%) rotate(${rot}deg)`;
             lastX = e.touches[0].clientX;
 
-            // 逻辑：对准特定角度(如180度)时增加同步率
-            const normalized = Math.abs(currentRot % 360);
-            if(normalized > 175 && normalized < 185) {
-                sync += 1.2;
-                syncLabel.style.opacity = 1;
-                syncLabel.innerText = `SYNC: ${Math.min(sync, 100).toFixed(0)}%`;
-                hint.innerText = "捕获到核心信号...";
-                hint.style.color = "#c5a059";
-                if(sync >= 100) finish();
-            } else {
-                sync = Math.max(0, sync - 0.5);
-                syncLabel.innerText = `SYNC: ${Math.min(sync, 100).toFixed(0)}%`;
-                hint.innerText = "信号微弱，继续寻找...";
-                hint.style.color = "#444";
+            let angle = Math.abs(rot % 360);
+            if(angle > 170 && angle < 190) {
+                progress += 1.5;
+                lockStatus.innerText = `LOCKING: ${Math.min(progress, 100).toFixed(0)}%`;
+                lockStatus.style.color = "#d4af37";
+                if(progress >= 100) {
+                    document.getElementById('res-name').innerText = document.getElementById('name').value;
+                    document.getElementById('tuner').style.display = 'none';
+                    document.getElementById('result').style.display = 'flex';
+                }
             }
         });
-
-        function finish() {
-            document.getElementById('res-user').innerText = document.getElementById('uname').value.toUpperCase();
-            // 随机生成一个2026年的日期增加真实感
-            const months = ["04", "05", "06", "08", "09", "11"];
-            document.getElementById('res-val').innerText = months[Math.floor(Math.random()*months.length)] + "." + (Math.floor(Math.random()*28)+1).toString().padStart(2,'0');
-            document.getElementById('result-page').style.display = 'flex';
-        }
     </script>
 </body>
 </html>
