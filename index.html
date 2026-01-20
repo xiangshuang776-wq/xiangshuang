@@ -1,118 +1,118 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE_LENS</title>
+    <title>THE ANCHOR</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow: hidden; font-family: "Times New Roman", serif; }
+        :root { --gold: #E5C76B; --bg: #000; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--gold); font-family: 'Helvetica Neue', sans-serif; height: 100vh; overflow: hidden; }
+        
+        /* 涟漪画布 */
+        canvas { position: fixed; inset: 0; cursor: crosshair; }
 
-        /* 液态球 */
-        #orb-container { 
-            position: fixed; inset: 0; display: flex; justify-content: center; 
-            align-items: center; z-index: 10; background: radial-gradient(circle at center, #111 0%, #000 100%);
+        /* 极简界面 */
+        #ui-layer { 
+            position: relative; z-index: 10; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            pointer-events: none; transition: 1s ease;
         }
-        #orb { 
-            width: 80px; height: 80px; background: #fff; border-radius: 50%;
-            box-shadow: 0 0 50px rgba(255,255,255,0.8);
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
+        
+        .prompt { font-size: 10px; letter-spacing: 8px; opacity: 0.5; animation: breathe 3s infinite; }
+        @keyframes breathe { 50% { opacity: 0.1; letter-spacing: 12px; } }
+
+        /* 输入状态 */
+        #input-box { 
+            pointer-events: all; border: none; background: none; color: #fff;
+            font-size: 32px; text-align: center; border-bottom: 1px solid var(--gold);
+            outline: none; margin-top: 30px; width: 80%; display: none;
         }
 
-        /* 录入层 */
-        #input-overlay {
-            position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+        /* 结果显示 */
+        #manifesto {
+            position: fixed; inset: 0; background: #fff; color: #000;
             display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100; color: #000;
+            z-index: 100; text-align: center;
         }
-        input { 
-            border: none; border-bottom: 2px solid #000; background: none;
-            font-size: 32px; text-align: center; padding: 10px; outline: none; margin-top: 20px;
-        }
-
-        /* 隧道效果 */
-        #tunnel {
-            position: fixed; inset: 0; display: none; z-index: 50;
-            background: repeating-radial-gradient(circle, #000, #111 10%, #000 20%);
-            animation: pulse 2s infinite alternate;
-        }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
-
-        /* 结果 */
-        #result {
-            position: fixed; inset: 0; background: #000; color: #fff;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 200; text-align: center;
-        }
-        .timer { font-size: 40px; font-weight: bold; font-family: monospace; color: #ff3b30; }
+        .date-huge { font-size: 80px; font-weight: 900; letter-spacing: -4px; }
     </style>
 </head>
 <body>
+    <canvas id="liquidCanvas"></canvas>
 
-    <div id="orb-container">
-        <div id="orb"></div>
-        <p style="position:absolute; bottom:15%; color:#333; letter-spacing:10px; font-size:12px;">长按拨动宿命</p>
+    <div id="ui-layer">
+        <div class="prompt" id="main-hint">TOUCH THE VOID</div>
+        <input type="text" id="input-box" placeholder="YOUR NAME">
     </div>
 
-    <div id="input-overlay">
-        <div style="font-size:12px; letter-spacing:5px;">IDENTITY_REQUIRED</div>
-        <input type="text" id="username" placeholder="NAME" spellcheck="false">
-        <p style="margin-top:40px; font-size:10px; color:#888;">输入完成后，请双指旋转屏幕</p>
-    </div>
-
-    <div id="tunnel"></div>
-
-    <div id="result">
-        <div style="font-size:14px; letter-spacing:8px; opacity:0.5; margin-bottom:40px;">THE_REVEAL</div>
-        <div style="margin-bottom:20px;">距离下一次资产跃迁还有</div>
-        <div class="timer" id="countdown">1,244,321</div>
-        <div style="margin-top:20px;">秒</div>
-        <button onclick="location.reload()" style="margin-top:100px; background:none; border:1px solid #333; color:#333; padding:10px 30px;">重新同步</button>
+    <div id="manifesto">
+        <div style="font-size:12px; letter-spacing:10px; margin-bottom:20px;">ANCHOR LOCKED</div>
+        <div class="date-huge" id="res-date">09.14</div>
+        <div style="margin-top:40px; font-size:14px; line-height:2;">
+            <b>因果锚点已扎根</b><br>
+            2026年 概率溢出点锁定。
+        </div>
+        <div id="progress-bar" style="width:200px; height:2px; background:#eee; margin-top:40px; position:relative; overflow:hidden;">
+            <div id="fill" style="position:absolute; left:0; top:0; height:100%; width:0%; background:#000; transition: 0.1s;"></div>
+        </div>
     </div>
 
     <script>
-        const orb = document.getElementById('orb');
-        const overlay = document.getElementById('input-overlay');
-        const tunnel = document.getElementById('tunnel');
-        const result = document.getElementById('result');
-        const timer = document.getElementById('countdown');
+        // 这是一个基础交互逻辑：通过触摸改变环境
+        const canvas = document.getElementById('liquidCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
 
-        let holdTimer;
-        
-        // 1. 长按液态球
-        orb.addEventListener('touchstart', (e) => {
-            orb.style.transform = "scale(0.5)";
-            holdTimer = setTimeout(() => {
-                overlay.style.display = 'flex';
-            }, 1000);
-        });
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        orb.addEventListener('touchend', () => {
-            clearTimeout(holdTimer);
-            orb.style.transform = "scale(1)";
-        });
-
-        // 2. 模拟双指旋转（简化为点击输入框后触发）
-        document.getElementById('username').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') {
-                overlay.style.display = 'none';
-                tunnel.style.display = 'block';
+        // 简单的涟漪动画模拟 (超人类版本会使用WebGL)
+        let points = [];
+        canvas.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            points.push({ x: touch.clientX, y: touch.clientY, r: 0, opacity: 1 });
+            if(points.length > 20) {
+                document.getElementById('main-hint').innerText = "OBSERVING REALITY...";
                 setTimeout(() => {
-                    tunnel.style.display = 'none';
-                    showResult();
-                }, 3000);
+                    document.getElementById('input-box').style.display = 'block';
+                }, 1000);
             }
         });
 
-        function showResult() {
-            result.style.display = 'flex';
-            let count = 1244321;
-            setInterval(() => {
-                count -= Math.floor(Math.random() * 10);
-                timer.innerText = count.toLocaleString();
-            }, 100);
+        function animate() {
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            points.forEach((p, i) => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(229, 199, 107, ${p.opacity})`;
+                ctx.stroke();
+                p.r += 2;
+                p.opacity -= 0.02;
+                if(p.opacity <= 0) points.splice(i, 1);
+            });
+            requestAnimationFrame(animate);
         }
+        animate();
+
+        // 模拟结果触发
+        document.getElementById('input-box').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                document.getElementById('manifesto').style.display = 'flex';
+                let p = 0;
+                const fill = document.getElementById('fill');
+                const itv = setInterval(() => {
+                    p += 0.5;
+                    fill.style.width = p + '%';
+                    if(p >= 100) clearInterval(itv);
+                }, 50);
+            }
+        });
     </script>
 </body>
 </html>
