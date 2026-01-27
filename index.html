@@ -1,130 +1,157 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THE_PULSE</title>
+    <title>THE GAP | 全时维度预言终端</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; color: #fff; font-family: "Helvetica", sans-serif; height: 100vh; overflow: hidden; }
+        :root { --neon: #00ff41; --danger: #ff003c; --bg: #020502; --text: #e0e0e0; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--neon); font-family: 'Segoe UI', 'Consolas', monospace; overflow: hidden; height: 100vh; }
+        
+        /* 扫描背景 */
+        body::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.03) 3px); z-index: 10; pointer-events: none; }
+        
+        .layout { display: grid; grid-template-columns: 380px 1fr 320px; height: 100vh; gap: 2px; background: #0a1a0a; }
+        .panel { background: var(--bg); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        
+        .p-header { padding: 12px; background: rgba(0, 255, 65, 0.05); font-size: 11px; letter-spacing: 2px; border-bottom: 1px solid var(--neon); display: flex; justify-content: space-between; }
+        
+        /* 左侧监控流 */
+        .monitor-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .asset-card { padding: 15px; border-bottom: 1px solid rgba(0,255,65,0.1); transition: 0.2s; position: relative; cursor: pointer; }
+        .asset-card:hover { background: rgba(0,255,65,0.08); }
+        .asset-card.active { border-left: 4px solid var(--neon); background: rgba(0,255,65,0.1); }
+        .tag { font-size: 9px; padding: 1px 4px; border: 1px solid var(--neon); margin-right: 5px; border-radius: 2px; }
 
-        /* 阶段 1：黑洞 */
-        #stage-1 { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: 1s; }
-        .black-hole { width: 100px; height: 100px; background: #fff; border-radius: 50%; box-shadow: 0 0 100px #fff; animation: pulse 4s infinite ease-in-out; cursor: pointer; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 200px #fff; } }
+        /* 中间核心区 */
+        .main-display { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #051505 0%, #000 70%); }
+        .big-price { font-size: 84px; font-weight: 900; color: #fff; letter-spacing: -4px; margin: 10px 0; }
+        .predict-overlay { width: 85%; padding: 25px; border: 1px double var(--neon); background: rgba(0,0,0,0.8); position: relative; }
+        .logic-tag { color: #888; font-size: 11px; margin-bottom: 10px; font-style: italic; }
 
-        /* 阶段 2：录入 */
-        #stage-2 { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 50; padding: 40px; }
-        input { background: none; border: none; border-bottom: 2px solid #fff; color: #fff; font-size: 32px; width: 100%; text-align: center; outline: none; margin-bottom: 50px; font-weight: 100; letter-spacing: 5px; }
+        /* 右侧动态记录 */
+        .log-stream { flex: 1; padding: 15px; font-size: 11px; line-height: 1.8; color: #00aa00; }
+        .profit-hit { color: #fff; font-weight: bold; animation: glow 1s; }
+        @keyframes glow { from { text-shadow: 0 0 20px #fff; } to { text-shadow: none; } }
 
-        /* 阶段 3：双指对焦 (灵魂玩法) */
-        #stage-3 { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
-        .touch-pad { position: absolute; bottom: 100px; width: 80px; height: 80px; border: 1px solid #fff; border-radius: 50%; opacity: 0.3; }
-        #left-pad { left: 40px; } #right-pad { right: 40px; }
-        .wave { position: absolute; top: 40%; width: 100%; height: 2px; background: #fff; opacity: 0.2; transform: scaleY(10); }
-        #sync-box { font-size: 80px; font-weight: 900; letter-spacing: -5px; }
-
-        /* 阶段 4：结果 */
-        #stage-4 { position: fixed; inset: 0; background: #fff; color: #000; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
-        .final-date { font-size: 100px; font-weight: 900; line-height: 1; margin: 20px 0; }
+        .btn-action { margin-top: 30px; width: 300px; padding: 20px; background: var(--neon); color: black; border: none; font-weight: 900; font-size: 18px; cursor: pointer; transition: 0.3s; }
+        .btn-action:hover { background: #fff; transform: scale(1.05); box-shadow: 0 0 40px var(--neon); }
     </style>
 </head>
 <body>
 
-    <div id="stage-1" onclick="toInput()">
-        <div class="black-hole"></div>
-        <p style="margin-top: 50px; font-size: 10px; letter-spacing: 8px; opacity: 0.5;">唤 醒 锚 点</p>
+<div class="layout">
+    <div class="panel">
+        <div class="p-header"><span>GLOBAL ASSET SCANNER</span><span id="scan-count">SCANNING: 4021</span></div>
+        <div class="monitor-scroll" id="asset-list">
+            </div>
     </div>
 
-    <div id="stage-2">
-        <input type="text" id="name" placeholder="IDENTIFIER" spellcheck="false" autocomplete="off">
-        <div onclick="toFocus()" style="font-size: 12px; letter-spacing: 10px; cursor: pointer; border: 1px solid #fff; padding: 15px 40px;">开始同步</div>
-    </div>
-
-    <div id="stage-3">
-        <div id="sync-box">00</div>
-        <div class="wave" id="wave-1"></div>
-        <div class="wave" id="wave-2" style="top: 45%;"></div>
-        <div id="left-pad" class="touch-pad"></div>
-        <div id="right-pad" class="touch-pad"></div>
-        <p style="position: absolute; bottom: 220px; font-size: 10px; letter-spacing: 5px; opacity: 0.5;">双 指 按 住 触 发 区 · 稳 定 脉 冲</p>
-    </div>
-
-    <div id="stage-4">
-        <div style="font-size: 10px; letter-spacing: 10px; margin-bottom: 20px;">LOCKED</div>
-        <div id="user-display" style="font-weight: bold; border-bottom: 2px solid #000;">---</div>
-        <div class="final-date" id="final-date">09/24</div>
-        <div style="max-width: 250px; font-size: 14px; line-height: 2; margin-top: 20px;">
-            资产共振已完成锚定。<br>该节点已写入你的现实协议。
+    <div class="panel main-display">
+        <div style="font-size: 14px; letter-spacing: 8px; opacity: 0.5;">PREDICTION ENGINE // 预言引擎 v4.0</div>
+        <div id="main-name" style="font-size: 28px; margin-top: 20px; font-weight: bold;">BITCOIN (BTC/USDT)</div>
+        <div class="big-price" id="main-price">$102,482.11</div>
+        
+        <div class="predict-overlay">
+            <div class="logic-tag" id="logic-text">> [信号源]: 检测到 Binance 卖盘枯竭，机构吸筹信号增强</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <div style="font-size: 12px; color: var(--neon);">预计上涨点位</div>
+                    <div style="font-size: 32px; font-weight: 900; color: white;" id="predict-pct">+3.42%</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--neon);">预计达成时间</div>
+                    <div style="font-size: 32px; font-weight: 900; color: var(--danger);" id="predict-time">128s</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; font-size: 14px; border-top: 1px solid rgba(0,255,65,0.2); padding-top: 15px;">
+                预期收益: <span style="color:white; font-weight:bold;" id="predict-money">$4,281.50</span>
+                <span style="float:right">目标平仓价: <span id="target-price" style="color:white">$105,921</span></span>
+            </div>
         </div>
-        <button onclick="location.reload()" style="margin-top: 60px; background: #000; color: #fff; border: none; padding: 20px 50px; font-size: 12px; letter-spacing: 5px;">保 存 并 闭 合</button>
+
+        <button class="btn-action" onclick="hunt()">立即同步收割 (EXECUTE)</button>
     </div>
 
-    <script>
-        // 流程切换
-        function toInput() {
-            document.getElementById('stage-1').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('stage-1').style.display = 'none';
-                document.getElementById('stage-2').style.display = 'flex';
-            }, 1000);
-        }
+    <div class="panel">
+        <div class="p-header">CAPTURE LOGS // 实时捕获</div>
+        <div id="log-content" class="log-stream">
+            </div>
+    </div>
+</div>
 
-        function toFocus() {
-            if(!document.getElementById('name').value) return;
-            document.getElementById('stage-2').style.display = 'none';
-            document.getElementById('stage-3').style.display = 'flex';
-        }
+<script>
+    const assets = [
+        { name: 'BTC', type: 'CRYPTO', p: 102482, gap: 3.42, logic: '机构大额买单介入 (+$40M)', time: 128 },
+        { name: 'NVDA', type: 'STOCKS', p: 128.45, gap: 1.25, logic: 'AI 算力板块流动性间隙', time: 420 },
+        { name: 'ETH', type: 'CRYPTO', p: 3421.12, gap: 4.10, logic: 'Layer 2 链上交互激增', time: 85 },
+        { name: 'AAPL', type: 'STOCKS', p: 231.20, gap: 0.95, logic: '盘后回购数据异常共振', time: 600 },
+        { name: 'SOL', type: 'CRYPTO', p: 242.05, gap: 5.22, logic: 'DEX 交易量瞬间突破阈值', time: 45 }
+    ];
 
-        // 核心逻辑：双指共振
-        let touches = 0;
-        let progress = 0;
-        const syncBox = document.getElementById('sync-box');
-        const wave1 = document.getElementById('wave-1');
-        const wave2 = document.getElementById('wave-2');
+    const listEl = document.getElementById('asset-list');
+    const logEl = document.getElementById('log-content');
 
-        window.addEventListener('touchstart', (e) => {
-            touches = e.touches.length;
-            if(touches === 2) {
-                document.getElementById('left-pad').style.opacity = "1";
-                document.getElementById('right-pad').style.opacity = "1";
-            }
-        });
+    // 初始化左侧
+    function initList() {
+        listEl.innerHTML = assets.map((a, i) => `
+            <div class="asset-card ${i===0?'active':''}" onclick="selectAsset(${i})">
+                <div style="font-size:10px; display:flex; justify-content:space-between;">
+                    <span><span class="tag">${a.type}</span> ${a.name}/USDT</span>
+                    <span style="color:var(--neon)">PREDICT: +${a.gap}%</span>
+                </div>
+                <div style="font-size:18px; font-weight:bold; margin:5px 0; color:white;">${a.name}</div>
+                <div style="font-size:11px; color:#006600;">${a.logic}</div>
+            </div>
+        `).join('');
+    }
 
-        window.addEventListener('touchend', (e) => {
-            touches = e.touches.length;
-            document.getElementById('left-pad').style.opacity = "0.3";
-            document.getElementById('right-pad').style.opacity = "0.3";
-        });
+    // 切换选中的资产
+    function selectAsset(index) {
+        const a = assets[index];
+        document.querySelectorAll('.asset-card').forEach((c,i) => c.className = i===index?'asset-card active':'asset-card');
+        document.getElementById('main-name').innerText = `${a.name} (${a.name}/USDT)`;
+        document.getElementById('predict-pct').innerText = `+${a.gap}%`;
+        document.getElementById('logic-text').innerText = `> [信号源]: ${a.logic}`;
+        currentBasePrice = a.p;
+        targetPct = a.gap;
+        timeLeft = a.time;
+    }
 
-        // 模拟高维对焦过程
-        setInterval(() => {
-            if(touches === 2) {
-                progress += 0.5;
-                // 视觉波动效果
-                wave1.style.transform = `scaleY(${10 + Math.sin(Date.now()/100) * 5})`;
-                wave2.style.transform = `scaleY(${10 + Math.cos(Date.now()/100) * 5})`;
-                syncBox.style.opacity = Math.random() * 0.5 + 0.5;
-            } else {
-                progress = Math.max(0, progress - 0.2);
-                wave1.style.transform = `scaleY(2)`;
-                wave2.style.transform = `scaleY(2)`;
-            }
+    let currentBasePrice = assets[0].p;
+    let targetPct = assets[0].gap;
+    let timeLeft = assets[0].time;
 
-            syncBox.innerText = Math.min(Math.floor(progress), 100).toString().padStart(2, '0');
+    // 核心循环：更新价格和逻辑
+    setInterval(() => {
+        const p = currentBasePrice + (Math.random()-0.5)*50;
+        document.getElementById('main-price').innerText = `$${p.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+        
+        // 更新预期金额
+        const money = (p * (targetPct/100) * 1.5).toFixed(2); // 模拟1.5手
+        document.getElementById('predict-money').innerText = `$${money}`;
+        
+        // 更新目标价
+        const target = (p * (1 + targetPct/100)).toFixed(2);
+        document.getElementById('target-price').innerText = `$${target}`;
+        
+        // 更新时间
+        if(timeLeft > 0) timeLeft--;
+        document.getElementById('predict-time').innerText = `${timeLeft}s`;
+    }, 1000);
 
-            if(progress >= 100) {
-                showFinal();
-                progress = -999; // 防止重复触发
-            }
-        }, 50);
+    // 右侧收益流模拟
+    setInterval(() => {
+        const msg = document.createElement('div');
+        msg.innerHTML = `> 猎手_${Math.floor(Math.random()*9000+1000)} 捕获 <strong>${assets[Math.floor(Math.random()*assets.length)].name}</strong> 间隙 <span class="profit-hit">+$${(Math.random()*1500+200).toFixed(2)}</span>`;
+        logEl.prepend(msg);
+        if(logEl.children.length > 20) logEl.lastChild.remove();
+    }, 2500);
 
-        function showFinal() {
-            document.getElementById('user-display').innerText = document.getElementById('name').value.toUpperCase();
-            document.getElementById('stage-4').style.display = 'flex';
-            // 简单的震动反馈
-            if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 200]);
-        }
-    </script>
+    function hunt() {
+        alert("指令已下达！\n正在通过加密隧道同步交易...\n请等待结果结算。");
+    }
+
+    initList();
+</script>
 </body>
 </html>
